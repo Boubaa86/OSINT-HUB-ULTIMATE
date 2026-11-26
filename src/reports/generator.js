@@ -55,8 +55,11 @@ export function renderReport(format, report) {
 export function streamPdf(response, report) {
   const doc = new PDFDocument({ size: 'A4', margin: 48, info: { Title: report.title, Author: 'OSINT HUB ULTIMATE' } });
   doc.pipe(response);
-  doc.fontSize(20).text(report.title, { underline: true });
-  doc.moveDown().fontSize(9).fillColor('#526777').text(`Généré le ${new Date(report.generatedAt).toISOString()}`);
+  doc.fontSize(12).fillColor('#167b9e').text('OSINT HUB ULTIMATE');
+  doc.moveDown(4).fillColor('#111111').fontSize(26).text(report.title, { align: 'left' });
+  doc.moveDown(2).fontSize(10).fillColor('#526777').text(`Rapport confidentiel · Généré le ${new Date(report.generatedAt).toISOString()}`);
+  doc.addPage();
+  doc.fillColor('#111111').fontSize(20).text(report.title, { underline: true });
   doc.fillColor('#111111').moveDown().fontSize(15).text('Résumé exécutif');
   doc.fontSize(10).text(report.investigation.description || 'Aucune description fournie.');
   doc.moveDown().fontSize(15).text('Objectif');
