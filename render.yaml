@@ -19,6 +19,8 @@ services:
         generateValue: true
       - key: TRUST_PROXY
         value: "true"
+      - key: PGSSLMODE
+        value: require
 databases:
   - name: osint-hub-db
     plan: free
