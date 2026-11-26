@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop/mega-expansion
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/server.js
+          node --check src/db.js
+          node --check src/auth.js
+          node --check src/security/credentials.js
+          node --check src/routes/investigations.js
+          node --check scripts/migrate.js
+          node --check public/app.js
+          node --check www/app.js
+      - name: Run tests
+        run: npm test
