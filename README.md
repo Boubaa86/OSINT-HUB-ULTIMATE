@@ -24,6 +24,7 @@ Ouvrir http://localhost:3000.
 
 - `GET /api/health` — état de vie HTTP.
 - `GET /api/dashboard/summary` — statistiques réelles et privées du compte connecté.
+- `GET /api/settings`, `PATCH /api/settings` — préférences utilisateur persistantes.
 - `GET|POST /api/automations`, `PATCH /api/automations/:id`, `POST /api/automations/:id/run`, `GET /api/automations/:id/runs` — surveillance passive.
 - `POST /api/automations/run-due` — worker planifié protégé par secret Bearer.
 - `GET /api/notifications`, `PATCH /api/notifications/:id/read` — boîte de notifications.
@@ -95,6 +96,7 @@ Le Blueprint propose un service Node et une base PostgreSQL distincte en région
 - [x] Migrations 001–004 et rollback protégé.
 - [x] Automatisations passives DNS/CT, historique d'exécution et notifications ; planification GitHub Actions activable par secrets.
 - [x] Administration : allowlist d'administrateurs, gestion des rôles/comptes et journal d'audit.
+- [x] Préférences persistantes : thème clair/sombre et barre latérale rétractable.
 - [ ] Résultat CI final complet de la branche courante.
 - [ ] Exécution des migrations sur la base Render OSINT.
 - [ ] Déploiement et tests de production.
