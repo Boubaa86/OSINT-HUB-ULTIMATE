@@ -321,17 +321,18 @@ function renderGraphSvg() {
     const to = graphState.positions[link.to_entity_id];
     if (!from || !to) return '';
     const evidence = `${link.relation_type} · confiance ${Math.round(Number(link.confidence || 0) * 100)}% · ${link.source_name || 'source'}`;
-    return `<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" class="graph-edge"><title>${escapeHtml(evidence)}</title></line>`;
+    return `<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" class="graph-edge" stroke="#3b809b" stroke-width="2" marker-end="url(#graph-arrow)"><title>${escapeHtml(evidence)}</title></line>`;
   }).join('');
   const nodeMarkup = graphState.nodes.map(node => {
     const point = graphState.positions[node.id];
     const label = node.display_label.length > 24 ? node.display_label.slice(0, 21) + '…' : node.display_label;
     return `<g class="graph-node" data-node-id="${escapeHtml(node.id)}" transform="translate(${point.x} ${point.y})" tabindex="0">
-      <circle r="27"></circle><text y="45" text-anchor="middle">${escapeHtml(label)}</text>
+      <circle r="27" fill="#123f59" stroke="#3ad7ec" stroke-width="2"></circle><text y="45" text-anchor="middle" fill="#e8f7ff" font-size="12" font-family="system-ui,sans-serif">${escapeHtml(label)}</text>
       <title>${escapeHtml(node.entity_type)} · ${escapeHtml(node.canonical_value)}</title>
     </g>`;
   }).join('');
-  svg.innerHTML = `<defs><marker id="graph-arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z"></path></marker></defs>
+  svg.innerHTML = `<rect x="0" y="0" width="900" height="560" rx="8" fill="#081522"></rect>
+    <defs><marker id="graph-arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#6bcde0"></path></marker></defs>
     <g id="graph-world" transform="translate(${graphState.panX} ${graphState.panY}) scale(${graphState.scale})">${lineMarkup}${nodeMarkup}</g>`;
   $('#graph-message').textContent = `${graphState.nodes.length} entité(s) · ${graphState.links.length} relation(s) sourcée(s)`;
 }
@@ -453,6 +454,50 @@ $('#export-graph-json').addEventListener('click', () => {
   link.click();
   URL.revokeObjectURL(url);
 });
+
+$('#export-graph-csv').addEventListener('click', () => {
+  const rows = [
+    ['record_type', 'id', 'entity_type', 'value', 'label', 'from_entity_id', 'to_entity_id', 'relation_type', 'confidence', 'source_name'],
+    ...graphState.nodes.map(node => ['entity', node.id, node.entity_type, node.canonical_value, node.display_label, '', '', '', '', '']),
+    ...graphState.links.map(link => ['relationship', link.id, '', '', '', link.from_entity_id, link.to_entity_id, link.relation_type, link.confidence, link.source_name || ''])
+  ];
+  const csv = rows.map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  const blob = new Blob(['\\uFEFF', csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'intelbase-graph.csv';
+  link.click();
+  URL.revokeObjectURL(url);
+});
+
+$('#export-graph-png').addEventListener('click', () => {
+  const svgText = new XMLSerializer().serializeToString($('#graph-svg'));
+  const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+  const svgUrl = URL.createObjectURL(svgBlob);
+  const image = new Image();
+  image.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1800;
+    canvas.height = 1120;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(blob => {
+      if (blob) {
+        const pngUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = pngUrl;
+        link.download = 'intelbase-graph.png';
+        link.click();
+        URL.revokeObjectURL(pngUrl);
+      }
+      URL.revokeObjectURL(svgUrl);
+    }, 'image/png');
+  };
+  image.onerror = () => URL.revokeObjectURL(svgUrl);
+  image.src = svgUrl;
+});
+
 $('#export-graph-svg').addEventListener('click', () => {
   const blob = new Blob([new XMLSerializer().serializeToString($('#graph-svg'))], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
