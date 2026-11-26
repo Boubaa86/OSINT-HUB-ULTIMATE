@@ -15,13 +15,14 @@ Current migrations:
 - `001_initial_schema`: users, sessions, roles, investigations, notes, sources, graph data, reports, integrations, notifications, automations, settings and audit log.
 - `002_ai_conversations`: owner-scoped AI conversations and messages.
 - `003_image_records`: owner-scoped image hashes and sanitized metadata (no image bytes).
+- `004_automation_runs`: passive monitoring execution history.
 
 ## Rollback
 
 Rollback is explicit and only targets the latest known migration:
 
 ```bash
-CONFIRM_ROLLBACK=003_image_records npm run migrate:down
+CONFIRM_ROLLBACK=004_automation_runs npm run migrate:down
 ```
 
 The command requires the exact latest migration name. Each down migration refuses to drop non-empty tables. Take and verify a backup before any production rollback. Never point the command at the Warworld database.
