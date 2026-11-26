@@ -1,6 +1,6 @@
 # Phase 2 — OSINT modules and workspace status
 
-Date: 2026-11-26
+Date: 2026-11-26 (extended module pass)
 
 ## Implemented in source
 
