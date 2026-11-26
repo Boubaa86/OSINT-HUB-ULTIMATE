@@ -2,6 +2,7 @@ const $ = selector => document.querySelector(selector);
 let csrfToken = null;
 let selectedCaseId = null;
 let currentSources = [];
+let aiConversationId = null;
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, character => ({
@@ -48,6 +49,7 @@ function showSignedOut() {
   $('#case-detail').hidden = true;
   $('#integrations-panel').hidden = true;
   $('#threat-panel').hidden = true;
+  $('#ai-panel').hidden = true;
   $('#global-search-results').hidden = true;
 }
 
@@ -637,11 +639,96 @@ $('#threat-hash-form').addEventListener('submit', event => {
   runThreatLookup(`/api/threat/hash/${encodeURIComponent($('#threat-hash').value.trim())}`);
 });
 
+
+function renderAiMessages(messages) {
+  const container = $('#ai-messages');
+  container.innerHTML = messages.length ? messages.map(message => `
+    <article class="ai-message ${message.role === 'assistant' ? 'assistant' : 'user'}">
+      <b>${message.role === 'assistant' ? 'Assistant IA' : 'Vous'}</b>
+      <p>${escapeHtml(message.content)}</p>
+      <small>${escapeHtml(new Date(message.created_at).toLocaleString())}</small>
+    </article>`).join('') : '<p class="loading">Aucun message dans cette conversation.</p>';
+  container.scrollTop = container.scrollHeight;
+}
+
+async function loadAiConversations() {
+  try {
+    const data = await apiRequest('/api/ai/conversations');
+    $('#ai-conversation-select').innerHTML = '<option value="">Choisir une conversation…</option>' + data.conversations.map(item =>
+      `<option value="${escapeHtml(item.id)}">${escapeHtml(item.title)}</option>`).join('');
+    if (aiConversationId && data.conversations.some(item => item.id === aiConversationId)) {
+      $('#ai-conversation-select').value = aiConversationId;
+      await loadAiConversation(aiConversationId);
+    } else if (data.conversations.length) {
+      aiConversationId = data.conversations[0].id;
+      $('#ai-conversation-select').value = aiConversationId;
+      await loadAiConversation(aiConversationId);
+    }
+  } catch (error) { $('#ai-status').textContent = error.message; }
+}
+
+async function loadAiConversation(id) {
+  if (!id) return;
+  try {
+    const data = await apiRequest(`/api/ai/conversations/${encodeURIComponent(id)}`);
+    aiConversationId = id;
+    renderAiMessages(data.messages);
+  } catch (error) { $('#ai-status').textContent = error.message; }
+}
+
+$('#ai-conversation-select').addEventListener('change', event => {
+  aiConversationId = event.target.value || null;
+  if (aiConversationId) loadAiConversation(aiConversationId);
+  else renderAiMessages([]);
+});
+
+$('#new-ai-conversation').addEventListener('click', async () => {
+  try {
+    const data = await apiMutation('/api/ai/conversations', 'POST', { title: 'Nouvelle conversation' });
+    aiConversationId = data.conversation.id;
+    await loadAiConversations();
+    $('#ai-conversation-select').value = aiConversationId;
+    renderAiMessages([]);
+    $('#ai-message-input').focus();
+  } catch (error) { $('#ai-status').textContent = error.message; }
+});
+
+$('#ai-message-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const message = $('#ai-message-input').value.trim();
+  if (!message) return;
+  const includeCase = $('#ai-include-case').checked;
+  if (includeCase && !selectedCaseId) {
+    $('#ai-status').textContent = 'Ouvre un dossier avant de demander son analyse.';
+    return;
+  }
+  const button = event.submitter || $('#ai-message-form button[type="submit"]');
+  button.disabled = true;
+  $('#ai-status').textContent = 'Analyse en cours…';
+  try {
+    if (!aiConversationId) {
+      const created = await apiMutation('/api/ai/conversations', 'POST', { title: message.slice(0, 70) });
+      aiConversationId = created.conversation.id;
+    }
+    const payload = { message };
+    if (includeCase) payload.investigationId = selectedCaseId;
+    const result = await apiMutation(`/api/ai/conversations/${encodeURIComponent(aiConversationId)}/messages`, 'POST', payload);
+    $('#ai-message-input').value = '';
+    await loadAiConversations();
+    await loadAiConversation(aiConversationId);
+    $('#ai-status').textContent = 'Réponse reçue. Vérifie toujours les sources citées.';
+  } catch (error) {
+    $('#ai-status').textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
+
 document.querySelectorAll('.nav').forEach(button => {
   button.addEventListener('click', () => {
     document.querySelectorAll('.nav').forEach(item => item.classList.remove('active'));
     button.classList.add('active');
-    const labels = { overview: 'Vue d’ensemble', investigations: 'Mes investigations', graph: 'IntelBase Pro', sources: 'API Center', threat: 'Threat Intelligence' };
+    const labels = { overview: 'Vue d’ensemble', investigations: 'Mes investigations', graph: 'IntelBase Pro', sources: 'API Center', threat: 'Threat Intelligence', ai: 'Assistant IA' };
     $('#page-title').textContent = labels[button.dataset.view] || 'Vue d’ensemble';
     if (button.dataset.view === 'investigations') {
       $('#cases-panel').hidden = false;
@@ -650,6 +737,15 @@ document.querySelectorAll('.nav').forEach(button => {
       if (selectedCaseId) loadGraph();
       else setAuthMessage('Ouvre un dossier, puis utilise « Voir le graphe » pour afficher ses entités sourcées.');
       $('#cases-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (button.dataset.view === 'ai') {
+      if ($('#account-active').hidden) {
+        setAuthMessage('Connecte-toi pour utiliser l’assistant IA.');
+        $('#account-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        $('#ai-panel').hidden = false;
+        loadAiConversations();
+        $('#ai-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     } else if (button.dataset.view === 'threat') {
       if ($('#account-active').hidden) {
         setAuthMessage('Connecte-toi pour utiliser Threat Intelligence.');
