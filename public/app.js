@@ -91,6 +91,47 @@ async function loadModules() {
   }
 }
 
+
+$('#global-search-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const output = $('#global-search-output');
+  $('#global-search-results').hidden = false;
+  output.className = 'result';
+  output.textContent = 'Identification du type de recherche et interrogation des sources compatibles…';
+  try {
+    const data = await apiRequest('/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: $('#global-search-input').value.trim(),
+        saveToHistory: $('#save-search-history').checked
+      })
+    });
+    output.innerHTML = `<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+    $('#global-search-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (error) {
+    output.textContent = error.message;
+  }
+});
+
+$('#load-search-history').addEventListener('click', async () => {
+  const list = $('#search-history-list');
+  list.hidden = false;
+  list.textContent = 'Chargement de l’historique…';
+  try {
+    const data = await apiRequest('/api/search/history');
+    list.innerHTML = data.history.length ? data.history.map(item => `
+      <button type="button" class="history-item" data-history-query="${escapeHtml(item.query_value)}">
+        <b>${escapeHtml(item.query_type)}</b><span>${escapeHtml(item.query_value)}</span><small>${escapeHtml(new Date(item.created_at).toLocaleString())}</small>
+      </button>`).join('') : '<p class="loading">Aucune recherche sauvegardée.</p>';
+  } catch (error) { list.textContent = error.message; }
+});
+
+$('#search-history-list').addEventListener('click', event => {
+  const item = event.target.closest('[data-history-query]');
+  if (item) $('#global-search-input').value = item.dataset.historyQuery;
+});
+
 $('#dns-form').addEventListener('submit', async event => {
   event.preventDefault();
   const domain = $('#domain').value.trim();
