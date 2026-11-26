@@ -23,6 +23,7 @@ Ouvrir http://localhost:3000.
 ## Routes principales
 
 - `GET /api/health` — état de vie HTTP.
+- `GET /api/dashboard/summary` — statistiques réelles et privées du compte connecté.
 - `GET /api/ready` — readiness PostgreSQL.
 - `GET /api/modules` — catalogue honnête des modules.
 - `POST /api/osint/dns` — DNS passif A/AAAA/MX/NS/TXT.
