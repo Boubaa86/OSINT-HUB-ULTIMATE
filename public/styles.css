@@ -86,3 +86,11 @@
 .threat-forms input{min-width:0;width:100%;background:#071421;border:1px solid #284159;border-radius:7px;padding:9px;color:var(--text);font:inherit;font-size:12px}
 .threat-forms button{border:0;border-radius:7px;padding:9px;background:linear-gradient(120deg,#1379bb,#0da6bd);color:white;font-weight:700;font-size:11px;cursor:pointer}
 @media(max-width:700px){.threat-forms{grid-template-columns:1fr}}
+
+.report-form{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:15px 0;padding:12px;border:1px solid var(--line);border-radius:8px;background:#091725}
+.report-form label{font-size:9px;letter-spacing:1px;color:var(--muted)}
+.report-form select{background:#071421;border:1px solid #284159;border-radius:7px;padding:9px;color:var(--text)}
+.report-form button{border:0;border-radius:7px;padding:9px 12px;background:linear-gradient(120deg,#1379bb,#0da6bd);color:white;font-weight:700;font-size:11px;cursor:pointer}
+#report-message{font-size:10px;color:#9fc3d6}
+.reports-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0}
+@media(max-width:620px){.reports-list{grid-template-columns:1fr}.report-form{align-items:stretch;flex-direction:column}}
