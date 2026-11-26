@@ -50,6 +50,7 @@ function showSignedOut() {
   $('#integrations-panel').hidden = true;
   $('#threat-panel').hidden = true;
   $('#ai-panel').hidden = true;
+  $('#image-panel').hidden = true;
   $('#global-search-results').hidden = true;
 }
 
@@ -724,11 +725,49 @@ $('#ai-message-form').addEventListener('submit', async event => {
   }
 });
 
+
+async function loadImageCases() {
+  try {
+    const data = await apiRequest('/api/investigations');
+    $('#image-case-select').innerHTML = '<option value="">Aucun dossier</option>' + data.investigations.map(item =>
+      `<option value="${escapeHtml(item.id)}">${escapeHtml(item.title)}</option>`).join('');
+    if (selectedCaseId) $('#image-case-select').value = selectedCaseId;
+  } catch (error) { $('#image-output').textContent = error.message; }
+}
+
+$('#image-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const file = $('#image-file').files?.[0];
+  if (!file) return;
+  if (file.size > 8 * 1024 * 1024) {
+    $('#image-output').textContent = 'Image limitée à 8 Mo.';
+    return;
+  }
+  const output = $('#image-output');
+  output.className = 'result';
+  output.textContent = 'Analyse des métadonnées et empreintes…';
+  try {
+    if (!csrfToken) await refreshCsrf();
+    const formData = new FormData();
+    formData.append('image', file, file.name);
+    if ($('#image-case-select').value) formData.append('investigationId', $('#image-case-select').value);
+    const response = await fetch('/api/osint/image', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'X-CSRF-Token': csrfToken },
+      body: formData
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `Erreur HTTP ${response.status}`);
+    output.innerHTML = `<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  } catch (error) { output.textContent = error.message; }
+});
+
 document.querySelectorAll('.nav').forEach(button => {
   button.addEventListener('click', () => {
     document.querySelectorAll('.nav').forEach(item => item.classList.remove('active'));
     button.classList.add('active');
-    const labels = { overview: 'Vue d’ensemble', investigations: 'Mes investigations', graph: 'IntelBase Pro', sources: 'API Center', threat: 'Threat Intelligence', ai: 'Assistant IA' };
+    const labels = { overview: 'Vue d’ensemble', investigations: 'Mes investigations', graph: 'IntelBase Pro', sources: 'API Center', threat: 'Threat Intelligence', ai: 'Assistant IA', image: 'Image Intelligence' };
     $('#page-title').textContent = labels[button.dataset.view] || 'Vue d’ensemble';
     if (button.dataset.view === 'investigations') {
       $('#cases-panel').hidden = false;
@@ -737,6 +776,15 @@ document.querySelectorAll('.nav').forEach(button => {
       if (selectedCaseId) loadGraph();
       else setAuthMessage('Ouvre un dossier, puis utilise « Voir le graphe » pour afficher ses entités sourcées.');
       $('#cases-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (button.dataset.view === 'image') {
+      if ($('#account-active').hidden) {
+        setAuthMessage('Connecte-toi pour utiliser Image Intelligence.');
+        $('#account-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        $('#image-panel').hidden = false;
+        loadImageCases();
+        $('#image-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     } else if (button.dataset.view === 'ai') {
       if ($('#account-active').hidden) {
         setAuthMessage('Connecte-toi pour utiliser l’assistant IA.');
