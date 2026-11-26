@@ -46,6 +46,8 @@ function showSignedOut() {
   $('#account-active').hidden = true;
   $('#cases-panel').hidden = true;
   $('#case-detail').hidden = true;
+  $('#integrations-panel').hidden = true;
+  $('#global-search-results').hidden = true;
 }
 
 async function refreshCsrf() {
