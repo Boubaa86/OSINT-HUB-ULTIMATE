@@ -55,7 +55,7 @@ Les migrations sont additives, ordonnées, transactionnelles et verrouillées pa
 ```bash
 npm run migrate
 # Rollback explicite de la dernière migration, uniquement si ses tables sont vides :
-CONFIRM_ROLLBACK=002_ai_conversations npm run migrate:down
+CONFIRM_ROLLBACK=003_image_records npm run migrate:down
 ```
 
 Le rollback refuse de supprimer les tables si elles contiennent des données. Voir [DB-MIGRATIONS.md](docs/DB-MIGRATIONS.md). Utilise une base OSINT dédiée, jamais la base Warworld/Dust Siege.
