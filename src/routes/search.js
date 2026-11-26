@@ -5,7 +5,7 @@ import dns from 'node:dns/promises';
 import ipaddr from 'ipaddr.js';
 import { parsePhoneNumberFromString } from 'libphonenumber-js/max';
 import { pool } from '../db.js';
-import { requireAuth } from '../auth.js';
+import { requireAuth, requireCsrf } from '../auth.js';
 import { lookupCertificateNames } from '../providers/certificate-transparency.js';
 import { lookupRdapIp } from '../providers/rdap.js';
 
@@ -88,7 +88,7 @@ export function createSearchRouter() {
     } catch (error) { next(error); }
   });
 
-  router.post('/', async (req, res, next) => {
+  router.post('/', requireCsrf, async (req, res, next) => {
     const parsed = inputSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: 'Recherche invalide.' });
     const query = parsed.data.query;
