@@ -32,12 +32,26 @@ function setAuthMessage(message, isError = false) {
   node.classList.toggle('error-text', isError);
 }
 
+async function loadDashboard() {
+  try {
+    const data = await apiRequest('/api/dashboard/summary');
+    $('#stat-investigations').textContent = data.investigations;
+    $('#stat-entities').textContent = data.entities;
+    $('#stat-reports').textContent = data.reports;
+  } catch {
+    $('#stat-investigations').textContent = '—';
+    $('#stat-entities').textContent = '—';
+    $('#stat-reports').textContent = '—';
+  }
+}
+
 function showAccount(user) {
   $('#auth-forms').hidden = true;
   $('#account-active').hidden = false;
   $('#cases-panel').hidden = false;
   $('#account-name').textContent = user.displayName || user.display_name || 'Compte connecté';
   $('#account-email').textContent = user.email || '';
+  loadDashboard();
 }
 
 function showSignedOut() {
