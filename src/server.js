@@ -5,6 +5,7 @@ import { z } from 'zod';
 import dns from 'node:dns/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getDatabaseStatus } from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -43,6 +44,14 @@ app.get('/api/health', (_req, res) => {
     version: '0.1.0',
     timestamp: new Date().toISOString()
   });
+});
+
+app.get('/api/ready', async (_req, res) => {
+  const database = await getDatabaseStatus();
+  if (!database.configured || !database.connected) {
+    return res.status(503).json({ ready: false, database, timestamp: new Date().toISOString() });
+  }
+  return res.json({ ready: true, database, timestamp: new Date().toISOString() });
 });
 
 app.get('/api/modules', (_req, res) => {
