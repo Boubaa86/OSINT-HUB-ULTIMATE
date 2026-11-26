@@ -39,6 +39,9 @@ test('account sessions and private case workflows are isolated by owner', { skip
   assert.equal(health.response.status, 200);
   const ready = await request('/api/ready');
   assert.equal(ready.response.status, 200);
+  const aiSchema = await pool.query("SELECT to_regclass('public.ai_conversations') AS conversations, to_regclass('public.ai_messages') AS messages");
+  assert.ok(aiSchema.rows[0].conversations);
+  assert.ok(aiSchema.rows[0].messages);
 
   t.diagnostic('Registering first user');
   const reg1 = await request('/api/auth/register', {
@@ -50,6 +53,23 @@ test('account sessions and private case workflows are isolated by owner', { skip
   userId1 = reg1.data.user.id;
   const cookie1 = reg1.response.headers.get('set-cookie').split(';')[0];
   const csrf1 = reg1.data.csrfToken;
+
+  const aiConversation = await request('/api/ai/conversations', {
+    method: 'POST', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: 'Analyse de test' })
+  });
+  assert.equal(aiConversation.response.status, 201);
+  const aiConversationId = aiConversation.data.conversation.id;
+  const aiUnavailable = await request(`/api/ai/conversations/${aiConversationId}/messages`, {
+    method: 'POST', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: 'Analyse les éléments disponibles.' })
+  });
+  assert.equal(aiUnavailable.response.status, 503);
+  const aiMessages = await request(`/api/ai/conversations/${aiConversationId}`, { cookie: cookie1 });
+  assert.equal(aiMessages.response.status, 200);
+  assert.equal(aiMessages.data.messages.length, 0);
 
   const threatHash = await request('/api/threat/hash/' + 'b'.repeat(64), { cookie: cookie1 });
   assert.equal(threatHash.response.status, 200);
