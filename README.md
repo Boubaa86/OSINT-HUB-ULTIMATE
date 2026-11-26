@@ -32,6 +32,8 @@ Ouvrir http://localhost:3000.
 - `POST /api/osint/phone` — formatage international et métadonnées du plan de numérotation (session requise ; aucune identification ou localisation).
 - `POST /api/search` — classification et recherche universelle sur les modules disponibles.
 - `GET /api/search/history` — historique personnel (uniquement les recherches enregistrées volontairement).
+- `GET /api/integrations` — état de configuration des fournisseurs, sans exposer les clés.
+- `POST /api/integrations/:provider/test` — test de connexion borné pour les fournisseurs configurés.
 - `POST /api/auth/register` — création de compte.
 - `POST /api/auth/login` — ouverture de session.
 - `GET /api/auth/me` — compte et rôles de la session.
@@ -86,6 +88,7 @@ Le workflow GitHub Actions vérifie la syntaxe JavaScript et exécute les tests 
 - [x] API IntelBase pour entités et relations obligatoirement sourcées
 - [x] Graphe interactif avec déplacement des nœuds, pan, zoom et exports SVG/PNG/JSON/CSV
 - [x] Global Search pour domaines, IP publiques, e-mails, téléphones, URL et classification de hash
+- [x] API Center : statut des clés et tests de connexion pour VirusTotal, AbuseIPDB, Shodan, HIBP et OpenAI
 - [x] Tests unitaires pour les identifiants et tokens
 - [ ] Exécution des migrations sur la base Render OSINT
 - [ ] Tests d'intégration avec PostgreSQL et vérification multi-utilisateur
