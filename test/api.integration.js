@@ -212,6 +212,12 @@ test('account sessions and private case workflows are isolated by owner', { skip
   assert.equal(reportHistory.response.status, 200);
   assert.equal(reportHistory.data.reports.length, 1);
 
+  const dashboard = await request('/api/dashboard/summary', { cookie: cookie1 });
+  assert.equal(dashboard.response.status, 200);
+  assert.equal(dashboard.data.investigations, 1);
+  assert.equal(dashboard.data.entities, 2);
+  assert.equal(dashboard.data.reports, 1);
+
   const invalidId = await request('/api/investigations/not-a-uuid', { cookie: cookie1 });
   assert.equal(invalidId.response.status, 400);
 
