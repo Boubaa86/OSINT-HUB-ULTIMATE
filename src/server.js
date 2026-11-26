@@ -15,6 +15,7 @@ import { createThreatRouter } from './routes/threat.js';
 import { createReportsRouter } from './routes/reports.js';
 import { createAiRouter } from './routes/ai.js';
 import { createImageRouter } from './routes/images.js';
+import { createDashboardRouter } from './routes/dashboard.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -47,6 +48,7 @@ app.use('/api/integrations', createIntegrationsRouter());
 app.use('/api/threat', createThreatRouter());
 app.use('/api/reports', createReportsRouter());
 app.use('/api/ai', createAiRouter());
+app.use('/api/dashboard', createDashboardRouter());
 
 const domainSchema = z.object({
   domain: z.string().trim().min(1).max(253).transform(value => value.toLowerCase())
