@@ -74,7 +74,7 @@ async function requestModel(input) {
         'Accept': 'application/json'
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-6.2-astra',
+        model: process.env.OPENAI_MODEL || 'gpt-6.2-sol',
         instructions,
         input,
         max_output_tokens: 1400,
@@ -102,7 +102,7 @@ async function requestModel(input) {
   }
   const outputText = extractOutputText(body);
   if (!outputText) return { status: 'empty_response' };
-  return { status: 'ok', text: outputText, responseId: body.id || null, model: body.model || process.env.OPENAI_MODEL || 'gpt-6.2-astra' };
+  return { status: 'ok', text: outputText, responseId: body.id || null, model: body.model || process.env.OPENAI_MODEL || 'gpt-6.2-sol' };
 }
 
 export function createAiRouter() {
