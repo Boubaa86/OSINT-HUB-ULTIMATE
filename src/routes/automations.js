@@ -39,7 +39,8 @@ async function collectTaskData(task) {
   const records = Object.fromEntries(definitions.map(([name], index) => {
     const item = settled[index];
     if (item.status === 'rejected') return [name, { status: 'error', code: item.reason?.code || 'DNS_ERROR' }];
-    const values = name === 'TXT' ? item.value.map(row => row.join('')) : item.value;
+    const values = name === 'TXT' ? item.value.map(row => row.join('')) : [...item.value];
+    values.sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right)));
     return [name, { status: 'ok', values }];
   }));
   return { source: 'Public DNS resolver', domain, records };
