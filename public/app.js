@@ -213,6 +213,7 @@ async function openCase(id) {
       apiRequest(`/api/investigations/${encodeURIComponent(id)}/sources`)
     ]);
     $('#detail-title').textContent = detail.investigation.title;
+    $('#graph-view').hidden = true;
     $('#notes-list').innerHTML = notes.notes.length ? notes.notes.map(note => `<div class="mini-record">${escapeHtml(note.body)}<small>${escapeHtml(new Date(note.created_at).toLocaleString())}</small></div>`).join('') : '<p class="loading">Aucune note.</p>';
     $('#sources-list').innerHTML = sources.sources.length ? sources.sources.map(source => `<div class="mini-record"><b>${escapeHtml(source.source_name)}</b><small>${escapeHtml(source.reliability)} · ${escapeHtml(source.source_url || 'Sans URL')}</small></div>`).join('') : '<p class="loading">Aucune source.</p>';
     $('#case-detail').hidden = false;
@@ -308,6 +309,120 @@ $('#ip-intel-form').addEventListener('submit', event => {
   runIntelLookup('#ip-intel-input', '#ip-intel-result', value => `/api/osint/ip/${encodeURIComponent(value)}`);
 });
 
+
+const graphState = { nodes: [], links: [], positions: {}, panX: 0, panY: 0, scale: 1, dragging: null, panning: null };
+
+function renderGraphSvg() {
+  const svg = $('#graph-svg');
+  const lineMarkup = graphState.links.map(link => {
+    const from = graphState.positions[link.from_entity_id];
+    const to = graphState.positions[link.to_entity_id];
+    if (!from || !to) return '';
+    const evidence = `${link.relation_type} · confiance ${Math.round(Number(link.confidence || 0) * 100)}% · ${link.source_name || 'source'}`;
+    return `<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" class="graph-edge"><title>${escapeHtml(evidence)}</title></line>`;
+  }).join('');
+  const nodeMarkup = graphState.nodes.map(node => {
+    const point = graphState.positions[node.id];
+    const label = node.display_label.length > 24 ? node.display_label.slice(0, 21) + '…' : node.display_label;
+    return `<g class="graph-node" data-node-id="${escapeHtml(node.id)}" transform="translate(${point.x} ${point.y})" tabindex="0">
+      <circle r="27"></circle><text y="45" text-anchor="middle">${escapeHtml(label)}</text>
+      <title>${escapeHtml(node.entity_type)} · ${escapeHtml(node.canonical_value)}</title>
+    </g>`;
+  }).join('');
+  svg.innerHTML = `<defs><marker id="graph-arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z"></path></marker></defs>
+    <g id="graph-world" transform="translate(${graphState.panX} ${graphState.panY}) scale(${graphState.scale})">${lineMarkup}${nodeMarkup}</g>`;
+  $('#graph-message').textContent = `${graphState.nodes.length} entité(s) · ${graphState.links.length} relation(s) sourcée(s)`;
+}
+
+async function loadGraph() {
+  if (!selectedCaseId) {
+    setAuthMessage('Ouvre un dossier avant de consulter son graphe.', true);
+    return;
+  }
+  try {
+    const data = await apiRequest(`/api/investigations/${encodeURIComponent(selectedCaseId)}/graph`);
+    graphState.nodes = data.entities;
+    graphState.links = data.relationships;
+    graphState.positions = {};
+    graphState.panX = 0;
+    graphState.panY = 0;
+    graphState.scale = 1;
+    const count = graphState.nodes.length;
+    graphState.nodes.forEach((node, index) => {
+      const angle = count > 1 ? (Math.PI * 2 * index) / count : 0;
+      const radius = Math.min(210, 95 + count * 7);
+      graphState.positions[node.id] = {
+        x: 450 + Math.cos(angle) * radius,
+        y: 265 + Math.sin(angle) * radius
+      };
+    });
+    $('#graph-view').hidden = false;
+    renderGraphSvg();
+  } catch (error) {
+    setAuthMessage(error.message, true);
+  }
+}
+
+const graphSvg = $('#graph-svg');
+graphSvg.addEventListener('pointerdown', event => {
+  const node = event.target.closest('[data-node-id]');
+  if (node) {
+    graphState.dragging = node.dataset.nodeId;
+  } else {
+    graphState.panning = { x: event.clientX, y: event.clientY, panX: graphState.panX, panY: graphState.panY };
+  }
+  graphSvg.setPointerCapture(event.pointerId);
+});
+graphSvg.addEventListener('pointermove', event => {
+  if (graphState.dragging) {
+    const point = graphSvg.createSVGPoint();
+    point.x = event.clientX;
+    point.y = event.clientY;
+    const local = point.matrixTransform(graphSvg.getScreenCTM().inverse());
+    graphState.positions[graphState.dragging] = {
+      x: (local.x - graphState.panX) / graphState.scale,
+      y: (local.y - graphState.panY) / graphState.scale
+    };
+    renderGraphSvg();
+  } else if (graphState.panning) {
+    graphState.panX = graphState.panning.panX + event.clientX - graphState.panning.x;
+    graphState.panY = graphState.panning.panY + event.clientY - graphState.panning.y;
+    renderGraphSvg();
+  }
+});
+function endGraphPointer(event) {
+  graphState.dragging = null;
+  graphState.panning = null;
+  if (graphSvg.hasPointerCapture(event.pointerId)) graphSvg.releasePointerCapture(event.pointerId);
+}
+graphSvg.addEventListener('pointerup', endGraphPointer);
+graphSvg.addEventListener('pointercancel', endGraphPointer);
+graphSvg.addEventListener('wheel', event => {
+  event.preventDefault();
+  graphState.scale = Math.max(0.45, Math.min(2.5, graphState.scale * (event.deltaY < 0 ? 1.1 : 0.9)));
+  renderGraphSvg();
+}, { passive: false });
+
+$('#show-graph').addEventListener('click', loadGraph);
+$('#export-graph-json').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({ nodes: graphState.nodes, relationships: graphState.links }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'intelbase-graph.json';
+  link.click();
+  URL.revokeObjectURL(url);
+});
+$('#export-graph-svg').addEventListener('click', () => {
+  const blob = new Blob([new XMLSerializer().serializeToString($('#graph-svg'))], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'intelbase-graph.svg';
+  link.click();
+  URL.revokeObjectURL(url);
+});
+
 document.querySelectorAll('.nav').forEach(button => {
   button.addEventListener('click', () => {
     document.querySelectorAll('.nav').forEach(item => item.classList.remove('active'));
@@ -317,8 +432,12 @@ document.querySelectorAll('.nav').forEach(button => {
     if (button.dataset.view === 'investigations') {
       $('#cases-panel').hidden = false;
       ($('#account-active').hidden ? $('#account-panel') : $('#cases-panel')).scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else if (button.dataset.view === 'graph' || button.dataset.view === 'sources') {
-      setAuthMessage('Ce module est encore en développement ; aucun résultat fictif ne sera affiché.');
+    } else if (button.dataset.view === 'graph') {
+      if (selectedCaseId) loadGraph();
+      else setAuthMessage('Ouvre un dossier, puis utilise « Voir le graphe » pour afficher ses entités sourcées.');
+      $('#cases-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (button.dataset.view === 'sources') {
+      setAuthMessage('Le centre de connecteurs API est encore en développement.');
       $('#account-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
       $('#account-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
