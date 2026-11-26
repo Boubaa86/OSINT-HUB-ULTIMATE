@@ -25,6 +25,10 @@ const sourceSchema = z.object({
 
 export function createInvestigationsRouter() {
   const router = Router();
+  router.param('id', (req, res, next, id) => {
+    if (!z.string().uuid().safeParse(id).success) return res.status(400).json({ error: 'Identifiant de dossier invalide.' });
+    next();
+  });
   router.use(requireAuth);
 
   router.get('/', async (req, res, next) => {
