@@ -607,7 +607,7 @@ document.querySelectorAll('.nav').forEach(button => {
   button.addEventListener('click', () => {
     document.querySelectorAll('.nav').forEach(item => item.classList.remove('active'));
     button.classList.add('active');
-    const labels = { overview: 'Vue d’ensemble', investigations: 'Mes investigations', graph: 'Graphe Intel — à venir', sources: 'Sources & connecteurs — à venir' };
+    const labels = { overview: 'Vue d’ensemble', investigations: 'Mes investigations', graph: 'IntelBase Pro', sources: 'API Center', threat: 'Threat Intelligence' };
     $('#page-title').textContent = labels[button.dataset.view] || 'Vue d’ensemble';
     if (button.dataset.view === 'investigations') {
       $('#cases-panel').hidden = false;
