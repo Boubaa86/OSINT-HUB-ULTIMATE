@@ -44,6 +44,11 @@
             <div class="search-row"><input id="ip-intel-input" placeholder="8.8.8.8" required><button type="submit">Analyser</button></div>
           </form>
           <div id="ip-intel-result" class="result empty">Les IP privées et réservées sont refusées.</div>
+          <form id="email-intel-form">
+            <label for="email-intel-input">VÉRIFICATION E-MAIL (SYNTAXE + MX, SANS TEST DE BOÎTE)</label>
+            <div class="search-row"><input id="email-intel-input" type="email" placeholder="contact@exemple.com" required><button type="submit">Vérifier</button></div>
+          </form>
+          <div id="email-intel-result" class="result empty">La boîte e-mail et son propriétaire ne sont pas vérifiés.</div>
         </div>
       </div>
       <div class="panel modules-panel"><div class="panel-head"><div><div class="eyebrow">ÉTAT DES MODULES</div><h3>Modules OSINT</h3></div><span class="tag">V1</span></div><div id="modules" class="module-list"><div class="loading">Chargement des modules…</div></div></div>
