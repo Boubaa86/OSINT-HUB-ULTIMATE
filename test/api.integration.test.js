@@ -94,6 +94,36 @@ test('account sessions and private case workflows are isolated by owner', { skip
   });
   assert.equal(source.response.status, 201);
 
+  const domainEntity = await request(`/api/investigations/${caseId}/entities`, {
+    method: 'POST', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entityType: 'domain', canonicalValue: 'example.com', displayLabel: 'example.com' })
+  });
+  assert.equal(domainEntity.response.status, 201);
+  const technologyEntity = await request(`/api/investigations/${caseId}/entities`, {
+    method: 'POST', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entityType: 'technology', canonicalValue: 'nginx', displayLabel: 'nginx' })
+  });
+  assert.equal(technologyEntity.response.status, 201);
+  const relationship = await request(`/api/investigations/${caseId}/relationships`, {
+    method: 'POST', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fromEntityId: domainEntity.data.entity.id,
+      toEntityId: technologyEntity.data.entity.id,
+      relationType: 'uses_technology',
+      sourceId: source.data.source.id,
+      confidence: 0.85,
+      rationale: 'La source de test documente cette technologie pour le domaine.'
+    })
+  });
+  assert.equal(relationship.response.status, 201, JSON.stringify(relationship.data));
+  const graph = await request(`/api/investigations/${caseId}/graph`, { cookie: cookie1 });
+  assert.equal(graph.response.status, 200);
+  assert.equal(graph.data.entities.length, 2);
+  assert.equal(graph.data.relationships.length, 1);
+
   const invalidId = await request('/api/investigations/not-a-uuid', { cookie: cookie1 });
   assert.equal(invalidId.response.status, 400);
 
