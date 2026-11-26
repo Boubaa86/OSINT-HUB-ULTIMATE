@@ -45,7 +45,7 @@ Les mutations nécessitent le cookie de session et l'en-tête `x-csrf-token`. Le
 
 ## AI Assistant
 
-Le modèle par défaut est `gpt-6.2-astra`, configurable avec `OPENAI_MODEL`. Ajoute `OPENAI_API_KEY` uniquement dans les variables d'environnement Render. Sans cette clé, l'assistant renvoie explicitement « non configuré ». Le contexte d'un dossier n'est envoyé au modèle que si l'utilisateur coche l'option dédiée. L'historique de conversation est stocké dans PostgreSQL ; la requête API utilise `store: false`.
+Le modèle par défaut est `gpt-6.2-sol`, configurable avec `OPENAI_MODEL`. Ajoute `OPENAI_API_KEY` uniquement dans les variables d'environnement Render. Sans cette clé, l'assistant renvoie explicitement « non configuré ». Le contexte d'un dossier n'est envoyé au modèle que si l'utilisateur coche l'option dédiée. L'historique de conversation est stocké dans PostgreSQL ; la requête API utilise `store: false`.
 
 ## PostgreSQL et migrations
 
