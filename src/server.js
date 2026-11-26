@@ -66,6 +66,7 @@ app.get('/api/modules', (_req, res) => {
     { id: 'domain-ct', name: 'Certificats de domaine', status: 'available', scope: 'Noms de certificats dans les journaux CT publics' },
     { id: 'ip-intel', name: 'Renseignement IP', status: 'available', scope: 'RDAP public et reverse DNS pour IP publiques' },
     { id: 'email-mx', name: 'E-mail syntaxe & MX', status: 'available', scope: 'Validation de syntaxe et DNS MX uniquement' },
+    { id: 'phone-format', name: 'Téléphone international', status: 'available', scope: 'Format, pays et type selon le plan de numérotation' },
     { id: 'username', name: 'Pseudonymes publics', status: 'planned', scope: 'Profils publics via sources autorisées' },
     { id: 'image', name: 'Analyse d’images', status: 'planned', scope: 'Métadonnées, dimensions et SHA-256' },
     { id: 'graph', name: 'Graphe de relations', status: 'planned', scope: 'Relations sourcées et niveaux de confiance' },
