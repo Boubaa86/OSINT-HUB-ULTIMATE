@@ -155,6 +155,17 @@ test('account sessions and private case workflows are isolated by owner', { skip
   assert.equal(graph.data.entities.length, 2);
   assert.equal(graph.data.relationships.length, 1);
 
+  const generatedReport = await request(`/api/reports/investigations/${caseId}`, {
+    method: 'POST', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ format: 'json' })
+  });
+  assert.equal(generatedReport.response.status, 200);
+  assert.ok(generatedReport.data.investigation);
+  const reportHistory = await request(`/api/reports/investigations/${caseId}`, { cookie: cookie1 });
+  assert.equal(reportHistory.response.status, 200);
+  assert.equal(reportHistory.data.reports.length, 1);
+
   const invalidId = await request('/api/investigations/not-a-uuid', { cookie: cookie1 });
   assert.equal(invalidId.response.status, 400);
 
