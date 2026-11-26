@@ -49,12 +49,14 @@ async function loadSettings() {
 $('#theme-toggle').addEventListener('click', async () => {
   const theme = document.body.classList.contains('theme-light') ? 'dark' : 'light';
   applyPreferences({ theme, sidebarCollapsed: document.querySelector('.shell').classList.contains('sidebar-collapsed') });
+  if ($('#account-active').hidden) return;
   try { await apiMutation('/api/settings', 'PATCH', { theme }); } catch (error) { setAuthMessage(error.message, true); }
 });
 
 $('#sidebar-toggle').addEventListener('click', async () => {
   const sidebarCollapsed = !document.querySelector('.shell').classList.contains('sidebar-collapsed');
   applyPreferences({ theme: document.body.classList.contains('theme-light') ? 'light' : 'dark', sidebarCollapsed });
+  if ($('#account-active').hidden) return;
   try { await apiMutation('/api/settings', 'PATCH', { sidebarCollapsed }); } catch (error) { setAuthMessage(error.message, true); }
 });
 
