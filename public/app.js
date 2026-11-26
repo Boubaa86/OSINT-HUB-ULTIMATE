@@ -1,6 +1,7 @@
 const $ = selector => document.querySelector(selector);
 let csrfToken = null;
 let selectedCaseId = null;
+let currentSources = [];
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, character => ({
@@ -213,6 +214,7 @@ async function openCase(id) {
       apiRequest(`/api/investigations/${encodeURIComponent(id)}/sources`)
     ]);
     $('#detail-title').textContent = detail.investigation.title;
+    currentSources = sources.sources;
     $('#graph-view').hidden = true;
     $('#notes-list').innerHTML = notes.notes.length ? notes.notes.map(note => `<div class="mini-record">${escapeHtml(note.body)}<small>${escapeHtml(new Date(note.created_at).toLocaleString())}</small></div>`).join('') : '<p class="loading">Aucune note.</p>';
     $('#sources-list').innerHTML = sources.sources.length ? sources.sources.map(source => `<div class="mini-record"><b>${escapeHtml(source.source_name)}</b><small>${escapeHtml(source.reliability)} · ${escapeHtml(source.source_url || 'Sans URL')}</small></div>`).join('') : '<p class="loading">Aucune source.</p>';
@@ -343,6 +345,10 @@ async function loadGraph() {
     const data = await apiRequest(`/api/investigations/${encodeURIComponent(selectedCaseId)}/graph`);
     graphState.nodes = data.entities;
     graphState.links = data.relationships;
+    const entityOptions = graphState.nodes.map(node => `<option value="${escapeHtml(node.id)}">${escapeHtml(node.display_label)}</option>`).join('');
+    $('#relation-from').innerHTML = entityOptions;
+    $('#relation-to').innerHTML = entityOptions;
+    $('#relation-source').innerHTML = currentSources.map(source => `<option value="${escapeHtml(source.id)}">${escapeHtml(source.source_name)}</option>`).join('');
     graphState.positions = {};
     graphState.panX = 0;
     graphState.panY = 0;
@@ -402,6 +408,40 @@ graphSvg.addEventListener('wheel', event => {
   graphState.scale = Math.max(0.45, Math.min(2.5, graphState.scale * (event.deltaY < 0 ? 1.1 : 0.9)));
   renderGraphSvg();
 }, { passive: false });
+
+
+$('#entity-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!selectedCaseId) return;
+  try {
+    await apiMutation(`/api/investigations/${encodeURIComponent(selectedCaseId)}/entities`, 'POST', {
+      entityType: $('#entity-type').value,
+      canonicalValue: $('#entity-value').value.trim(),
+      displayLabel: $('#entity-label').value.trim()
+    });
+    $('#entity-form').reset();
+    await loadGraph();
+    setAuthMessage('Entité ajoutée à IntelBase.');
+  } catch (error) { setAuthMessage(error.message, true); }
+});
+
+$('#relationship-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!selectedCaseId) return;
+  try {
+    await apiMutation(`/api/investigations/${encodeURIComponent(selectedCaseId)}/relationships`, 'POST', {
+      fromEntityId: $('#relation-from').value,
+      toEntityId: $('#relation-to').value,
+      relationType: $('#relation-type').value,
+      sourceId: $('#relation-source').value,
+      confidence: Number($('#relation-confidence').value),
+      rationale: $('#relation-rationale').value.trim()
+    });
+    $('#relation-rationale').value = '';
+    await loadGraph();
+    setAuthMessage('Relation enregistrée avec sa source et sa justification.');
+  } catch (error) { setAuthMessage(error.message, true); }
+});
 
 $('#show-graph').addEventListener('click', loadGraph);
 $('#export-graph-json').addEventListener('click', () => {
