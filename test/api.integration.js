@@ -253,6 +253,39 @@ test('account sessions and private case workflows are isolated by owner', { skip
   assert.equal(archived.response.status, 200);
   assert.equal(archived.data.investigation.status, 'archived');
 
+  process.env.ADMIN_EMAILS = email1;
+  const adminMe = await request('/api/auth/me', { cookie: cookie1 });
+  assert.equal(adminMe.response.status, 200);
+  assert.ok(adminMe.data.user.roles.includes('admin'));
+  const adminOverview = await request('/api/admin/overview', { cookie: cookie1 });
+  assert.equal(adminOverview.response.status, 200);
+  const adminUsers = await request('/api/admin/users', { cookie: cookie1 });
+  assert.equal(adminUsers.response.status, 200);
+  assert.ok(adminUsers.data.users.some(user => user.id === userId2));
+  const assignAnalyst = await request(`/api/admin/users/${userId2}/roles`, {
+    method: 'PATCH', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roles: ['analyst'] })
+  });
+  assert.equal(assignAnalyst.response.status, 200);
+  const preventSelfDisable = await request(`/api/admin/users/${userId1}/status`, {
+    method: 'PATCH', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: 'disabled' })
+  });
+  assert.equal(preventSelfDisable.response.status, 400);
+  const disableOther = await request(`/api/admin/users/${userId2}/status`, {
+    method: 'PATCH', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: 'disabled' })
+  });
+  assert.equal(disableOther.response.status, 200);
+  const disabledMe = await request('/api/auth/me', { cookie: cookie2 });
+  assert.equal(disabledMe.response.status, 401);
+  const audit = await request('/api/admin/audit', { cookie: cookie1 });
+  assert.equal(audit.response.status, 200);
+  assert.ok(audit.data.events.length >= 2);
+
   const logout = await request('/api/auth/logout', {
     method: 'POST', cookie: cookie1, csrf: csrf1,
     headers: { 'Content-Type': 'application/json' },
