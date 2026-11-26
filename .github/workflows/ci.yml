@@ -45,6 +45,9 @@ jobs:
           node --check src/security/credentials.js
           node --check src/routes/investigations.js
           node --check src/routes/intelligence.js
+          node --check src/routes/search.js
+          node --check src/routes/integrations.js
+          node --check src/providers/registry.js
           node --check src/providers/certificate-transparency.js
           node --check src/providers/rdap.js
           node --check scripts/migrate.js
