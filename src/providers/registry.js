@@ -53,6 +53,7 @@ export async function testProvider(providerId) {
   try {
     const response = await fetch(url, { headers, signal: AbortSignal.timeout(8_000), redirect: 'error' });
     const latencyMs = Date.now() - started;
+    await response.body?.cancel().catch(() => {});
     return {
       provider: provider.id,
       status: response.ok ? 'connected' : response.status === 401 || response.status === 403 ? 'invalid_key_or_forbidden' : 'http_error',
