@@ -19,6 +19,7 @@ import { createDashboardRouter } from './routes/dashboard.js';
 import { createAutomationsRouter } from './routes/automations.js';
 import { createNotificationsRouter } from './routes/notifications.js';
 import { createAdminRouter } from './routes/admin.js';
+import { createSettingsRouter } from './routes/settings.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -55,6 +56,7 @@ app.use('/api/dashboard', createDashboardRouter());
 app.use('/api/automations', createAutomationsRouter());
 app.use('/api/notifications', createNotificationsRouter());
 app.use('/api/admin', createAdminRouter());
+app.use('/api/settings', createSettingsRouter());
 
 const domainSchema = z.object({
   domain: z.string().trim().min(1).max(253).transform(value => value.toLowerCase())
