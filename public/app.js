@@ -99,7 +99,7 @@ $('#global-search-form').addEventListener('submit', async event => {
   output.className = 'result';
   output.textContent = 'Identification du type de recherche et interrogation des sources compatibles…';
   try {
-    const data = await apiRequest('/api/search', {
+    const data = await apiMutation('/api/search', 'POST', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -323,11 +323,7 @@ $('#phone-intel-form').addEventListener('submit', async event => {
   box.className = 'result';
   box.textContent = 'Lecture des métadonnées de numérotation…';
   try {
-    const data = await apiRequest('/api/osint/phone', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: $('#phone-intel-input').value.trim() })
-    });
+    const data = await apiMutation('/api/osint/phone', 'POST', { phone: $('#phone-intel-input').value.trim() });
     box.innerHTML = `<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
   } catch (error) { box.textContent = error.message; }
 });
@@ -338,11 +334,7 @@ $('#email-intel-form').addEventListener('submit', async event => {
   box.className = 'result';
   box.textContent = 'Vérification de la syntaxe et des enregistrements MX…';
   try {
-    const data = await apiRequest('/api/osint/email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: $('#email-intel-input').value.trim() })
-    });
+    const data = await apiMutation('/api/osint/email', 'POST', { email: $('#email-intel-input').value.trim() });
     box.innerHTML = `<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
   } catch (error) { box.textContent = error.message; }
 });
