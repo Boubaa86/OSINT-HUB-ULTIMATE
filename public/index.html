@@ -36,6 +36,49 @@
       </div>
       <div class="panel modules-panel"><div class="panel-head"><div><div class="eyebrow">ÉTAT DES MODULES</div><h3>Modules OSINT</h3></div><span class="tag">V1</span></div><div id="modules" class="module-list"><div class="loading">Chargement des modules…</div></div></div>
     </section>
+
+    <section class="panel account-panel" id="account-panel">
+      <div class="panel-head"><div><div class="eyebrow">ESPACE PERSONNEL</div><h3>Compte et accès sécurisé</h3></div><span class="tag">SESSION</span></div>
+      <p id="auth-message" role="status">Connecte-toi ou crée ton compte pour sauvegarder tes dossiers.</p>
+      <div id="auth-forms" class="auth-grid">
+        <form id="login-form" class="auth-form">
+          <h4>Connexion</h4>
+          <label for="login-email">E-MAIL</label><input id="login-email" type="email" autocomplete="username" required>
+          <label for="login-password">MOT DE PASSE</label><input id="login-password" type="password" autocomplete="current-password" required>
+          <button type="submit">Se connecter</button>
+        </form>
+        <form id="register-form" class="auth-form">
+          <h4>Créer un compte</h4>
+          <label for="register-name">NOM AFFICHÉ</label><input id="register-name" maxlength="60" required>
+          <label for="register-email">E-MAIL</label><input id="register-email" type="email" autocomplete="email" required>
+          <label for="register-password">MOT DE PASSE (12 CARACTÈRES MIN.)</label><input id="register-password" type="password" minlength="12" maxlength="128" autocomplete="new-password" required>
+          <button type="submit">Créer mon compte</button>
+        </form>
+      </div>
+      <div id="account-active" class="account-active" hidden>
+        <div><strong id="account-name"></strong><small id="account-email"></small></div>
+        <button id="logout-button" class="secondary-button" type="button">Déconnexion</button>
+      </div>
+    </section>
+
+    <section class="panel cases-panel" id="cases-panel" hidden>
+      <div class="panel-head"><div><div class="eyebrow">CASE MANAGEMENT</div><h3>Mes dossiers d'investigation</h3></div><button id="refresh-cases" class="secondary-button" type="button">Actualiser</button></div>
+      <form id="case-form" class="case-form">
+        <h4>Nouveau dossier</h4>
+        <label for="case-title">TITRE</label><input id="case-title" maxlength="140" required placeholder="Ex. Audit du domaine de mon association">
+        <label for="case-objective">OBJECTIF</label><input id="case-objective" maxlength="3000" placeholder="Que veux-tu vérifier ?">
+        <label for="case-description">DESCRIPTION</label><textarea id="case-description" rows="2" maxlength="5000" placeholder="Contexte et périmètre autorisé"></textarea>
+        <button type="submit">Créer le dossier</button>
+      </form>
+      <div id="cases-list" class="cases-list"><p class="loading">Chargement des dossiers…</p></div>
+      <div id="case-detail" class="case-detail" hidden>
+        <div class="panel-head"><h4 id="detail-title">Dossier</h4><button id="close-case-detail" class="secondary-button" type="button">Fermer</button></div>
+        <div class="case-detail-grid">
+          <div><h4>Notes</h4><div id="notes-list"></div><form id="note-form"><label for="note-body">Ajouter une note</label><textarea id="note-body" rows="2" maxlength="10000" required></textarea><button type="submit">Enregistrer la note</button></form></div>
+          <div><h4>Sources</h4><div id="sources-list"></div><form id="source-form"><label for="source-name">Nom de la source</label><input id="source-name" maxlength="160" required><label for="source-url">URL publique (facultatif)</label><input id="source-url" type="url" maxlength="2048" placeholder="https://..."><button type="submit">Ajouter la source</button></form></div>
+        </div>
+      </div>
+    </section>
     <footer><span>OSINT HUB ULTIMATE <b>·</b> BUILD 0.1.0</span><span>Usage légal uniquement · Respect de la vie privée</span></footer>
   </main>
 </div>
