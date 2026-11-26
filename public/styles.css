@@ -139,3 +139,30 @@
 @media(max-width:620px){.notification-item{grid-template-columns:1fr}.automation-actions button{flex:1}}
 
 .automation-runs{display:grid;gap:4px;padding-top:5px}.automation-runs small{font-size:10px;color:#9fc3d6}
+
+.shell.sidebar-collapsed{grid-template-columns:70px 1fr}
+.shell.sidebar-collapsed .brand div,.shell.sidebar-collapsed .nav-label,.shell.sidebar-collapsed .nav span,.shell.sidebar-collapsed .side-bottom span,.shell.sidebar-collapsed .side-bottom small{display:none}
+.shell.sidebar-collapsed .brand{padding:0 5px 35px}
+.shell.sidebar-collapsed .nav{justify-content:center;padding:13px 0}
+.shell.sidebar-collapsed .side-bottom{display:flex;justify-content:center;padding:12px 0}
+body.theme-light{--bg:#f2f6fa;--panel:#ffffff;--line:#d6e0e9;--muted:#5d7185;--text:#152b3d;background:var(--bg);color:var(--text)}
+body.theme-light .sidebar{background:#e7eef5;border-color:#d1dce6}
+body.theme-light .nav{color:#4a6074}
+body.theme-light .nav.active{background:#d6edf3;color:#087f99;box-shadow:inset 2px 0 #0c9bb3}
+body.theme-light .welcome{background:linear-gradient(115deg,#e0f0f6,#f7fbff 65%,#eaf2f8);border-color:#c9dce7}
+body.theme-light .welcome p,body.theme-light .panel p{color:#526a7f}
+body.theme-light .stats article,body.theme-light .panel{background:#fff;border-color:#d6e0e9}
+body.theme-light .stats span{color:#637a8f}
+body.theme-light .search-row input,body.theme-light .global-search>input,body.theme-light .graph-form input,body.theme-light .graph-form select,body.theme-light .graph-form textarea,body.theme-light .threat-forms input,body.theme-light .image-form select,body.theme-light .automation-form input:not([type=checkbox]),body.theme-light .automation-form select,body.theme-light .ai-toolbar select,body.theme-light .ai-message-form textarea{background:#f7fafc;border-color:#cbd8e3;color:#152b3d}
+body.theme-light .result,body.theme-light .record,body.theme-light .module,body.theme-light .provider-card,body.theme-light .graph-form,body.theme-light .automation-card,body.theme-light .notification-item,body.theme-light .admin-user,body.theme-light .audit-item,body.theme-light .history-item{background:#f7fafc;border-color:#d6e0e9;color:#30485d}
+body.theme-light #graph-svg{background:#f7fafc;border-color:#d6e0e9}
+body.theme-light #graph-svg>rect:first-child{fill:#f7fafc}
+body.theme-light #graph-svg .graph-node circle{fill:#d8edf4;stroke:#1687a1}
+body.theme-light #graph-svg .graph-node text{fill:#17374a}
+body.theme-light #graph-svg .graph-edge{stroke:#6c8fa3}
+body.theme-light .ai-message{background:#f1f6fa;border-color:#d6e0e9}
+body.theme-light .ai-message.user{background:#e1f1f6}
+body.theme-light .ai-message p{color:#1a3347}
+body.theme-light .side-bottom{border-color:#d0dce6;color:#516a80}
+body.theme-light .search-row input:focus,body.theme-light .global-search>input:focus{border-color:#168ca8}
+@media(max-width:900px){.shell.sidebar-collapsed{grid-template-columns:70px 1fr}}
