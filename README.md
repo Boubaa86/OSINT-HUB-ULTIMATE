@@ -30,6 +30,7 @@ Ouvrir http://localhost:3000.
 - `GET /api/osint/ip/:address` — RDAP et reverse DNS d'une IP publique.
 - `POST /api/osint/email` — syntaxe et DNS MX uniquement, aucune vérification de boîte.
 - `POST /api/osint/phone` — formatage et plan de numérotation, sans propriétaire ni localisation.
+- `POST /api/osint/image` — EXIF filtré, dimensions, SHA-256, dHash et détection de doublons.
 - `POST /api/search` — recherche universelle sur les modules disponibles.
 - `GET /api/search/history` — historique personnel, uniquement si l'utilisateur l'a demandé.
 - `GET /api/integrations` et `POST /api/integrations/:provider/test` — état des fournisseurs et tests bornés.
@@ -79,6 +80,7 @@ Le Blueprint propose un service Node et une base PostgreSQL distincte en région
 - [x] Dossiers, notes, sources et archivage avec contrôle du propriétaire.
 - [x] Analyse de domaines DNS/Certificate Transparency et IP publiques RDAP/PTR.
 - [x] Vérification e-mail syntaxe/MX et métadonnées téléphoniques.
+- [x] Image Intelligence : EXIF sans GPS, SHA-256, dHash et doublons.
 - [x] Global Search avec historique facultatif.
 - [x] IntelBase API et graphe interactif avec déplacement, pan, zoom et exports SVG/PNG/JSON/CSV.
 - [x] API Center et tests de connexion des fournisseurs.
@@ -90,7 +92,7 @@ Le Blueprint propose un service Node et une base PostgreSQL distincte en région
 - [ ] Exécution des migrations sur la base Render OSINT.
 - [ ] Déploiement et tests de production.
 - [ ] Tests AppMint sur Android.
-- [ ] Image/OCR, recherche de pseudonymes par sources autorisées, filtres/chronologie avancés, flux CERT, automatisations et administration.
+- [ ] OCR, recherche de pseudonymes par sources autorisées, filtres/chronologie avancés, flux CERT, automatisations et administration.
 
 ## Confidentialité et usage
 
