@@ -33,6 +33,18 @@
         <p>Consultez les enregistrements DNS publics d'un domaine : A, AAAA, MX, NS et TXT.</p>
         <form id="dns-form"><label for="domain">NOM DE DOMAINE</label><div class="search-row"><input id="domain" name="domain" placeholder="exemple.com" autocomplete="off" required><button>Analyser <b>→</b></button></div></form>
         <div id="dns-result" class="result empty">Les résultats vérifiables apparaîtront ici, avec leur source et leur date.</div>
+        <div class="intel-tools">
+          <form id="domain-intel-form">
+            <label for="domain-intel-input">ANALYSE DE DOMAINE (DNS + CERTIFICATS PUBLICS)</label>
+            <div class="search-row"><input id="domain-intel-input" placeholder="exemple.com" required><button type="submit">Analyser</button></div>
+          </form>
+          <div id="domain-intel-result" class="result empty">Connexion requise pour l'analyse approfondie.</div>
+          <form id="ip-intel-form">
+            <label for="ip-intel-input">ANALYSE D'IP PUBLIQUE (RDAP + REVERSE DNS)</label>
+            <div class="search-row"><input id="ip-intel-input" placeholder="8.8.8.8" required><button type="submit">Analyser</button></div>
+          </form>
+          <div id="ip-intel-result" class="result empty">Les IP privées et réservées sont refusées.</div>
+        </div>
       </div>
       <div class="panel modules-panel"><div class="panel-head"><div><div class="eyebrow">ÉTAT DES MODULES</div><h3>Modules OSINT</h3></div><span class="tag">V1</span></div><div id="modules" class="module-list"><div class="loading">Chargement des modules…</div></div></div>
     </section>
