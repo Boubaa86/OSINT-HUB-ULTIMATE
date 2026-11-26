@@ -16,6 +16,7 @@
     <button class="nav" data-view="investigations">▣ <span>Investigations</span></button>
     <button class="nav" data-view="graph">⌘ <span>Graphe Intel</span></button>
     <button class="nav" data-view="sources">◎ <span>Sources & connecteurs</span></button>
+    <button class="nav" data-view="threat">⚠ <span>Threat Intelligence</span></button>
     <div class="side-bottom"><div class="status-dot"></div><span>Serveur actif</span><small id="health">Vérification…</small></div>
   </aside>
   <main class="main">
@@ -135,6 +136,16 @@
       <div class="panel-head"><div><div class="eyebrow">API CENTER</div><h3>Connecteurs et fournisseurs</h3></div><button id="refresh-providers" class="secondary-button" type="button">Actualiser</button></div>
       <p>Les clés restent sur le serveur Render. Cette page n'affiche jamais leur valeur.</p>
       <div id="providers-list" class="providers-list"><p class="loading">Chargement des fournisseurs…</p></div>
+    </section>
+    <section class="panel threat-panel" id="threat-panel" hidden>
+      <div class="panel-head"><div><div class="eyebrow">THREAT INTELLIGENCE</div><h3>Réputation des indicateurs publics</h3></div><span class="tag">API OPTIONNELLES</span></div>
+      <p>Les résultats proviennent uniquement des fournisseurs configurés. Une absence de signal ne garantit pas l'innocuité.</p>
+      <div class="threat-forms">
+        <form id="threat-ip-form"><label for="threat-ip">IP PUBLIQUE</label><input id="threat-ip" placeholder="8.8.8.8" required><button type="submit">Vérifier IP</button></form>
+        <form id="threat-domain-form"><label for="threat-domain">DOMAINE</label><input id="threat-domain" placeholder="exemple.com" required><button type="submit">Vérifier domaine</button></form>
+        <form id="threat-hash-form"><label for="threat-hash">HASH MD5 / SHA-1 / SHA-256</label><input id="threat-hash" placeholder="SHA-256…" required><button type="submit">Vérifier hash</button></form>
+      </div>
+      <div id="threat-output" class="result empty">Configure VirusTotal ou AbuseIPDB dans Render pour obtenir des verdicts réels.</div>
     </section>
     <footer><span>OSINT HUB ULTIMATE <b>·</b> BUILD 0.1.0</span><span>Usage légal uniquement · Respect de la vie privée</span></footer>
   </main>
