@@ -51,7 +51,7 @@ test('account sessions and private case workflows are isolated by owner', { skip
   const csrf1 = reg1.data.csrfToken;
 
   const hashSearch = await request('/api/search', {
-    method: 'POST', cookie: cookie1,
+    method: 'POST', cookie: cookie1, csrf: csrf1,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: 'a'.repeat(64), saveToHistory: true })
   });
