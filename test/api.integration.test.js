@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 
-test('account sessions and private case workflows are isolated by owner', { skip: !process.env.DATABASE_URL }, { timeout: 90_000 }, async t => {
+test('account sessions and private case workflows are isolated by owner', { skip: !process.env.DATABASE_URL, timeout: 90_000 }, async t => {
   process.env.NODE_ENV = 'test';
   const { app } = await import('../src/server.js');
   const { pool } = await import('../src/db.js');
