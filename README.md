@@ -40,6 +40,9 @@ Ouvrir http://localhost:3000.
 - `GET /api/investigations/:id` — détail d'un dossier appartenant à l'utilisateur.
 - `PATCH /api/investigations/:id` — modification / archivage (session + CSRF requis).
 - `GET|POST /api/investigations/:id/notes` — notes privées.
+- `GET /api/investigations/:id/graph` — entités et relations documentées.
+- `POST /api/investigations/:id/entities` — ajout d'entité typée.
+- `POST /api/investigations/:id/relationships` — relation avec source, justification et confiance obligatoires.
 - `GET|POST /api/investigations/:id/sources` — sources et fiabilité déclarée.
 
 Les mutations nécessitent le cookie de session et l'en-tête `x-csrf-token`. La session est conservée dans un cookie HttpOnly. Les dossiers ne disposent pas de route de suppression définitive : ils peuvent être archivés.
@@ -78,12 +81,13 @@ Le workflow GitHub Actions vérifie la syntaxe JavaScript et exécute les tests 
 - [x] Analyse d'IP publiques via RDAP et reverse DNS
 - [x] Vérification e-mail limitée à la syntaxe et aux DNS MX
 - [x] Formatage téléphone international sans recherche de propriétaire ou de position
+- [x] API IntelBase pour entités et relations obligatoirement sourcées
 - [x] Tests unitaires pour les identifiants et tokens
 - [ ] Exécution des migrations sur la base Render OSINT
 - [ ] Tests d'intégration avec PostgreSQL et vérification multi-utilisateur
 - [ ] Interface utilisateur de connexion et gestion des dossiers
 - [ ] Pseudonymes, image et veille de menaces
-- [ ] IntelBase, recherche globale, IA, automatisations et rapports
+- [ ] Visualisation interactive IntelBase, recherche globale, IA, automatisations et rapports
 - [ ] Déploiement et tests de production
 
 ## Confidentialité et usage
