@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 const { Pool } = pg;
 const here = path.dirname(fileURLToPath(import.meta.url));
 const migrationDir = path.join(here, '..', 'src', 'migrations');
+const migrations = ['001_initial_schema', '002_ai_conversations'];
 
 if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL is required. No database has been changed.');
@@ -29,15 +30,15 @@ try {
     )
   `);
 
-  const version = '001_initial_schema';
-  const alreadyApplied = await client.query(
-    'SELECT version FROM schema_migrations WHERE version = $1',
-    [version]
-  );
-
-  if (alreadyApplied.rowCount) {
-    console.log(`Migration ${version} already applied; no changes made.`);
-  } else {
+  for (const version of migrations) {
+    const alreadyApplied = await client.query(
+      'SELECT version FROM schema_migrations WHERE version = $1',
+      [version]
+    );
+    if (alreadyApplied.rowCount) {
+      console.log(`Migration ${version} already applied; no changes made.`);
+      continue;
+    }
     const sql = await readFile(path.join(migrationDir, `${version}.up.sql`), 'utf8');
     await client.query('BEGIN');
     try {
