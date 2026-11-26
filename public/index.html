@@ -17,6 +17,7 @@
     <button class="nav" data-view="graph">⌘ <span>Graphe Intel</span></button>
     <button class="nav" data-view="sources">◎ <span>Sources & connecteurs</span></button>
     <button class="nav" data-view="threat">⚠ <span>Threat Intelligence</span></button>
+    <button class="nav" data-view="ai">✧ <span>Assistant IA</span></button>
     <div class="side-bottom"><div class="status-dot"></div><span>Serveur actif</span><small id="health">Vérification…</small></div>
   </aside>
   <main class="main">
@@ -153,6 +154,17 @@
         <form id="threat-hash-form"><label for="threat-hash">HASH MD5 / SHA-1 / SHA-256</label><input id="threat-hash" placeholder="SHA-256…" required><button type="submit">Vérifier hash</button></form>
       </div>
       <div id="threat-output" class="result empty">Configure VirusTotal ou AbuseIPDB dans Render pour obtenir des verdicts réels.</div>
+    </section>
+    <section class="panel ai-panel" id="ai-panel" hidden>
+      <div class="panel-head"><div><div class="eyebrow">AI OSINT ASSISTANT</div><h3>Assistant d'analyse sourcée</h3></div><button id="new-ai-conversation" class="secondary-button" type="button">Nouvelle conversation</button></div>
+      <div class="ai-toolbar"><label for="ai-conversation-select">CONVERSATION</label><select id="ai-conversation-select"><option value="">Aucune conversation</option></select></div>
+      <div id="ai-messages" class="ai-messages"><p class="loading">Sélectionne une conversation ou crée-en une nouvelle.</p></div>
+      <form id="ai-message-form" class="ai-message-form">
+        <textarea id="ai-message-input" rows="3" maxlength="4000" placeholder="Pose une question sur les sources, les contradictions ou les pistes de vérification…" required></textarea>
+        <label class="ai-context"><input id="ai-include-case" type="checkbox"> Inclure le dossier actuellement ouvert (envoi à OpenAI)</label>
+        <button type="submit">Envoyer à l'assistant</button>
+        <small id="ai-status" role="status">Nécessite OPENAI_API_KEY configurée sur Render.</small>
+      </form>
     </section>
     <footer><span>OSINT HUB ULTIMATE <b>·</b> BUILD 0.1.0</span><span>Usage légal uniquement · Respect de la vie privée</span></footer>
   </main>
