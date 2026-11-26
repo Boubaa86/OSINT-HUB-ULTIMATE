@@ -61,6 +61,7 @@ jobs:
           node --check src/routes/automations.js
           node --check src/routes/notifications.js
           node --check src/routes/admin.js
+          node --check src/routes/settings.js
           node --check src/reports/generator.js
           node --check src/providers/certificate-transparency.js
           node --check src/providers/rdap.js
