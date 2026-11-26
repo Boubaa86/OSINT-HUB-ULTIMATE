@@ -99,6 +99,26 @@
           <div class="graph-toolbar"><span id="graph-message">Graphe IntelBase</span><div><button id="export-graph-svg" class="secondary-button" type="button">SVG</button><button id="export-graph-json" class="secondary-button" type="button">JSON</button></div></div>
           <svg id="graph-svg" viewBox="0 0 900 560" role="img" aria-label="Graphe des entités et relations du dossier"></svg>
           <small class="graph-help">Glisse pour déplacer le graphe, tire un nœud pour le déplacer et utilise la molette pour zoomer.</small>
+          <div class="graph-edit-grid">
+            <form id="entity-form" class="graph-form">
+              <h4>Ajouter une entité</h4>
+              <label for="entity-type">TYPE</label>
+              <select id="entity-type"><option value="organization">Organisation</option><option value="domain">Domaine</option><option value="ip">IP publique</option><option value="url">URL publique</option><option value="hash">Hash</option><option value="technology">Technologie</option><option value="certificate">Certificat</option></select>
+              <label for="entity-value">VALEUR CANONIQUE</label><input id="entity-value" maxlength="2048" required placeholder="exemple.com">
+              <label for="entity-label">LIBELLÉ</label><input id="entity-label" maxlength="160" required placeholder="Nom affiché dans le graphe">
+              <button type="submit">Ajouter l'entité</button>
+            </form>
+            <form id="relationship-form" class="graph-form">
+              <h4>Ajouter une relation sourcée</h4>
+              <label for="relation-from">ENTITÉ DE DÉPART</label><select id="relation-from" required></select>
+              <label for="relation-to">ENTITÉ D'ARRIVÉE</label><select id="relation-to" required></select>
+              <label for="relation-type">TYPE DE RELATION</label><select id="relation-type"><option value="resolves_to">Résout vers</option><option value="hosts">Héberge</option><option value="uses_technology">Utilise une technologie</option><option value="certificate_for">Certificat pour</option><option value="same_organization">Même organisation</option><option value="observed_on">Observé sur</option><option value="references">Référence</option></select>
+              <label for="relation-source">SOURCE ENREGISTRÉE</label><select id="relation-source" required></select>
+              <label for="relation-confidence">CONFIANCE (0 À 1)</label><input id="relation-confidence" type="number" min="0" max="1" step="0.01" value="0.75" required>
+              <label for="relation-rationale">JUSTIFICATION</label><textarea id="relation-rationale" rows="2" minlength="10" maxlength="2000" required></textarea>
+              <button type="submit">Créer la relation</button>
+            </form>
+          </div>
         </div>
         <div class="case-detail-grid">
           <div><h4>Notes</h4><div id="notes-list"></div><form id="note-form"><label for="note-body">Ajouter une note</label><textarea id="note-body" rows="2" maxlength="10000" required></textarea><button type="submit">Enregistrer la note</button></form></div>
