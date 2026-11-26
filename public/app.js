@@ -65,6 +65,7 @@ function showSignedOut() {
   $('#threat-panel').hidden = true;
   $('#ai-panel').hidden = true;
   $('#image-panel').hidden = true;
+  $('#automation-panel').hidden = true;
   $('#global-search-results').hidden = true;
 }
 
@@ -777,11 +778,89 @@ $('#image-form').addEventListener('submit', async event => {
   } catch (error) { output.textContent = error.message; }
 });
 
+
+async function loadAutomations() {
+  const list = $('#automation-list');
+  list.textContent = 'Chargement des tâches…';
+  try {
+    const data = await apiRequest('/api/automations');
+    list.innerHTML = data.tasks.length ? data.tasks.map(task => `
+      <article class="automation-card" data-task-card="${escapeHtml(task.id)}">
+        <div><b>${escapeHtml(task.config.domain)}</b><small>${task.task_type === 'dns_change' ? 'Surveillance DNS' : 'Certificate Transparency'} · ${escapeHtml(task.frequency)}</small></div>
+        <span class="automation-state">${task.enabled ? 'ACTIVÉE' : 'DÉSACTIVÉE'} · ${escapeHtml(task.last_status || 'jamais exécutée')}</span>
+        <small>Prochaine exécution : ${task.next_run_at ? escapeHtml(new Date(task.next_run_at).toLocaleString()) : '—'}</small>
+        <div class="automation-actions">
+          <button type="button" data-run-task="${escapeHtml(task.id)}">Exécuter maintenant</button>
+          <button type="button" class="secondary-button" data-toggle-task="${escapeHtml(task.id)}" data-enabled="${task.enabled ? 'true' : 'false'}">${task.enabled ? 'Désactiver' : 'Activer'}</button>
+        </div>
+      </article>`).join('') : '<p class="loading">Aucune surveillance créée.</p>';
+  } catch (error) { list.textContent = error.message; }
+}
+
+async function loadNotifications() {
+  const list = $('#notifications-list');
+  list.textContent = 'Chargement des notifications…';
+  try {
+    const data = await apiRequest('/api/notifications');
+    list.innerHTML = data.notifications.length ? data.notifications.map(item => `
+      <article class="notification-item ${item.read_at ? '' : 'unread'}" data-notification="${escapeHtml(item.id)}">
+        <div><b>${escapeHtml(item.title)}</b><p>${escapeHtml(item.body)}</p><small>${escapeHtml(new Date(item.created_at).toLocaleString())}</small></div>
+        ${item.read_at ? '<span>Lu</span>' : `<button type="button" data-mark-read="${escapeHtml(item.id)}">Marquer comme lu</button>`}
+      </article>`).join('') : '<p class="loading">Aucune notification.</p>';
+  } catch (error) { list.textContent = error.message; }
+}
+
+$('#automation-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  try {
+    await apiMutation('/api/automations', 'POST', {
+      taskType: $('#automation-type').value,
+      domain: $('#automation-domain').value.trim(),
+      frequency: $('#automation-frequency').value,
+      authorized: $('#automation-authorized').checked
+    });
+    $('#automation-form').reset();
+    await loadAutomations();
+  } catch (error) { $('#automation-list').textContent = error.message; }
+});
+
+$('#automation-list').addEventListener('click', async event => {
+  const runButton = event.target.closest('[data-run-task]');
+  const toggleButton = event.target.closest('[data-toggle-task]');
+  try {
+    if (runButton) {
+      runButton.disabled = true;
+      runButton.textContent = 'Exécution…';
+      const result = await apiMutation(`/api/automations/${encodeURIComponent(runButton.dataset.runTask)}/run`, 'POST', {});
+      await loadAutomations();
+      await loadNotifications();
+      setAuthMessage(result.result.status === 'completed' ? 'Surveillance exécutée.' : 'La surveillance a échoué.', result.result.status !== 'completed');
+    } else if (toggleButton) {
+      await apiMutation(`/api/automations/${encodeURIComponent(toggleButton.dataset.toggleTask)}`, 'PATCH', {
+        enabled: toggleButton.dataset.enabled !== 'true'
+      });
+      await loadAutomations();
+    }
+  } catch (error) { setAuthMessage(error.message, true); }
+});
+
+$('#notifications-list').addEventListener('click', async event => {
+  const button = event.target.closest('[data-mark-read]');
+  if (!button) return;
+  try {
+    await apiMutation(`/api/notifications/${encodeURIComponent(button.dataset.markRead)}/read`, 'PATCH', {});
+    await loadNotifications();
+  } catch (error) { setAuthMessage(error.message, true); }
+});
+
+$('#refresh-automations').addEventListener('click', loadAutomations);
+$('#refresh-notifications').addEventListener('click', loadNotifications);
+
 document.querySelectorAll('.nav').forEach(button => {
   button.addEventListener('click', () => {
     document.querySelectorAll('.nav').forEach(item => item.classList.remove('active'));
     button.classList.add('active');
-    const labels = { overview: 'Vue d’ensemble', investigations: 'Mes investigations', graph: 'IntelBase Pro', sources: 'API Center', threat: 'Threat Intelligence', ai: 'Assistant IA', image: 'Image Intelligence' };
+    const labels = { overview: 'Vue d’ensemble', investigations: 'Mes investigations', graph: 'IntelBase Pro', sources: 'API Center', threat: 'Threat Intelligence', ai: 'Assistant IA', image: 'Image Intelligence', automation: 'Automation' };
     $('#page-title').textContent = labels[button.dataset.view] || 'Vue d’ensemble';
     if (button.dataset.view === 'investigations') {
       $('#cases-panel').hidden = false;
@@ -790,6 +869,16 @@ document.querySelectorAll('.nav').forEach(button => {
       if (selectedCaseId) loadGraph();
       else setAuthMessage('Ouvre un dossier, puis utilise « Voir le graphe » pour afficher ses entités sourcées.');
       $('#cases-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (button.dataset.view === 'automation') {
+      if ($('#account-active').hidden) {
+        setAuthMessage('Connecte-toi pour gérer les automatisations.');
+        $('#account-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        $('#automation-panel').hidden = false;
+        loadAutomations();
+        loadNotifications();
+        $('#automation-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     } else if (button.dataset.view === 'image') {
       if ($('#account-active').hidden) {
         setAuthMessage('Connecte-toi pour utiliser Image Intelligence.');
