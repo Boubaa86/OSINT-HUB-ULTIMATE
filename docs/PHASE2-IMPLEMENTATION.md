@@ -17,6 +17,7 @@ Date: 2026-11-26 (extended module pass)
 - Reports: PDF, HTML, JSON, CSV and Markdown generation; report metadata is stored in PostgreSQL, while generated files are streamed and not retained server-side.
 - AI assistant: owner-scoped conversation history and OpenAI Responses API integration, enabled only with a configured key. Case context is sent only when the user explicitly opts in.
 - Image metadata: JPEG/PNG/WebP/TIFF validation, size and pixel limits, EXIF allowlist without GPS/serial numbers, SHA-256, dHash duplicate candidates, and metadata-only storage.
+- Automation: owner-scoped passive DNS/Certificate Transparency tasks, run history, in-app notifications and a 30-minute GitHub Actions worker. Periodic execution remains inactive until the two documented GitHub secrets are configured.
 
 ## Security controls
 
@@ -31,8 +32,8 @@ Date: 2026-11-26 (extended module pass)
 
 ## Validation status
 
-- PostgreSQL migrations 001, 002 and 003 are applied in order by CI; guarded reverse migrations require explicit confirmation and refuse to drop non-empty data.
-- API integration tests cover account registration, CSRF, owner isolation, notes, sources, graph entities/relations, search history, provider configuration, threat not-configured behavior, report generation, AI not-configured behavior and image duplicate detection.
+- PostgreSQL migrations 001–004 are applied in order by CI; guarded reverse migrations require explicit confirmation and refuse to drop non-empty data.
+- API integration tests cover account registration, CSRF, owner isolation, notes, sources, graph entities/relations, search history, provider configuration, threat not-configured behavior, report generation, AI not-configured behavior, image duplicate detection, automation task CRUD and protected worker access.
 - The first CI run completed migration but its API test process did not finish. The integration suite was then separated from unit tests, given request and test timeouts, and the workflow was updated. A fresh completed CI result is still required before calling the current branch fully tested.
 - No OSINT Render service or database has been provisioned.
 - No production or AppMint APK test has been performed.
@@ -43,7 +44,6 @@ Date: 2026-11-26 (extended module pass)
 - OCR and reverse-image search.
 - Public profile research through official/authorized sources only.
 - CERT/public threat feeds and richer reputation coverage.
-- Automation task scheduling and notifications.
 - Admin roles, quotas and audit event writes.
 - Additional reports and visualizations.
 - Android API base URL integration and real-device test.
