@@ -55,7 +55,7 @@ jobs:
           node --check src/providers/certificate-transparency.js
           node --check src/providers/rdap.js
           node --check scripts/migrate.js
-          node --check test/api.integration.test.js
+          node --check test/api.integration.js
           node --check test/intelligence.test.js
           node --check public/app.js
           node --check www/app.js
@@ -64,8 +64,10 @@ jobs:
         env:
           DATABASE_URL: postgres://osint_test:osint_test@localhost:5432/osint_test
           NODE_ENV: test
-      - name: Run tests
+      - name: Run unit tests
         run: npm test
+      - name: Run PostgreSQL API integration tests
+        run: npm run test:integration
         env:
           DATABASE_URL: postgres://osint_test:osint_test@localhost:5432/osint_test
           NODE_ENV: test
