@@ -1,4 +1,6 @@
 const $ = selector => document.querySelector(selector);
+let csrfToken = null;
+let selectedCaseId = null;
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, character => ({
@@ -6,11 +8,67 @@ function escapeHtml(value) {
   }[character]));
 }
 
+async function apiRequest(url, options = {}) {
+  const response = await fetch(url, { credentials: 'same-origin', ...options });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || `Erreur HTTP ${response.status}`);
+  return data;
+}
+
+async function apiMutation(url, method, body) {
+  if (!csrfToken) await refreshCsrf();
+  return apiRequest(url, {
+    method,
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+    body: JSON.stringify(body)
+  });
+}
+
+function setAuthMessage(message, isError = false) {
+  const node = $('#auth-message');
+  node.textContent = message;
+  node.classList.toggle('error-text', isError);
+}
+
+function showAccount(user) {
+  $('#auth-forms').hidden = true;
+  $('#account-active').hidden = false;
+  $('#cases-panel').hidden = false;
+  $('#account-name').textContent = user.displayName || user.display_name || 'Compte connecté';
+  $('#account-email').textContent = user.email || '';
+}
+
+function showSignedOut() {
+  csrfToken = null;
+  selectedCaseId = null;
+  $('#auth-forms').hidden = false;
+  $('#account-active').hidden = true;
+  $('#cases-panel').hidden = true;
+  $('#case-detail').hidden = true;
+}
+
+async function refreshCsrf() {
+  const data = await apiRequest('/api/auth/csrf');
+  csrfToken = data.csrfToken;
+  return csrfToken;
+}
+
+async function loadSession() {
+  try {
+    const data = await apiRequest('/api/auth/me');
+    await refreshCsrf();
+    showAccount(data.user);
+    setAuthMessage('Session sécurisée active. Tes dossiers sont privés.');
+    await loadCases();
+  } catch {
+    showSignedOut();
+    setAuthMessage('Connecte-toi ou crée ton compte pour sauvegarder tes dossiers.');
+  }
+}
+
 async function loadStatus() {
   try {
-    const response = await fetch('/api/health');
-    if (!response.ok) throw new Error('API indisponible');
-    const data = await response.json();
+    const data = await apiRequest('/api/health');
     $('#health').textContent = `API OK · ${data.version}`;
   } catch {
     $('#health').textContent = 'API indisponible';
@@ -19,9 +77,7 @@ async function loadStatus() {
 
 async function loadModules() {
   try {
-    const response = await fetch('/api/modules');
-    if (!response.ok) throw new Error('Chargement impossible');
-    const data = await response.json();
+    const data = await apiRequest('/api/modules');
     const available = data.modules.filter(module => module.status === 'available').length;
     $('#module-count').textContent = available;
     $('#modules').innerHTML = data.modules.map(module => `
@@ -40,21 +96,16 @@ $('#dns-form').addEventListener('submit', async event => {
   const box = $('#dns-result');
   box.className = 'result';
   box.textContent = 'Interrogation des DNS publics…';
-
   try {
-    const response = await fetch('/api/osint/dns', {
+    const data = await apiRequest('/api/osint/dns', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ domain })
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Erreur de recherche');
-
     const rows = Object.entries(data.records).map(([type, values]) => `
       <div class="record"><b>${type}</b>${values.length
         ? escapeHtml(values.map(value => typeof value === 'object' ? JSON.stringify(value) : value).join(' · '))
         : 'Aucun enregistrement trouvé'}</div>`).join('');
-
     box.innerHTML = `<strong>${escapeHtml(data.domain)}</strong>${rows}
       <small>Source : ${escapeHtml(data.source)} · ${escapeHtml(new Date(data.collectedAt).toLocaleString())}</small>
       <p>${escapeHtml(data.caveat)}</p>`;
@@ -63,22 +114,164 @@ $('#dns-form').addEventListener('submit', async event => {
   }
 });
 
+$('#login-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  setAuthMessage('Connexion en cours…');
+  try {
+    const data = await apiRequest('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: $('#login-email').value, password: $('#login-password').value })
+    });
+    csrfToken = data.csrfToken;
+    showAccount(data.user);
+    setAuthMessage('Connexion réussie.');
+    $('#login-password').value = '';
+    await loadCases();
+  } catch (error) { setAuthMessage(error.message, true); }
+});
+
+$('#register-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  setAuthMessage('Création du compte…');
+  try {
+    const data = await apiRequest('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        displayName: $('#register-name').value,
+        email: $('#register-email').value,
+        password: $('#register-password').value
+      })
+    });
+    csrfToken = data.csrfToken;
+    showAccount(data.user);
+    setAuthMessage('Compte créé. Bienvenue !');
+    $('#register-password').value = '';
+    await loadCases();
+  } catch (error) { setAuthMessage(error.message, true); }
+});
+
+$('#logout-button').addEventListener('click', async () => {
+  try {
+    await apiMutation('/api/auth/logout', 'POST', {});
+    showSignedOut();
+    setAuthMessage('Déconnexion effectuée.');
+  } catch (error) { setAuthMessage(error.message, true); }
+});
+
+async function loadCases() {
+  try {
+    const data = await apiRequest('/api/investigations');
+    $('#cases-list').innerHTML = data.investigations.length ? data.investigations.map(item => `
+      <article class="case-card">
+        <div><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.status)} · Modifié le ${escapeHtml(new Date(item.updated_at).toLocaleString())}</small></div>
+        <div class="case-actions">
+          <button type="button" data-open-case="${escapeHtml(item.id)}">Ouvrir</button>
+          ${item.status === 'archived' ? '' : `<button type="button" class="secondary-button" data-archive-case="${escapeHtml(item.id)}">Archiver</button>`}
+        </div>
+      </article>`).join('') : '<p class="loading">Aucun dossier pour le moment. Crée ton premier dossier ci-dessus.</p>';
+    $('#investigation-count').textContent = data.investigations.length;
+  } catch (error) {
+    $('#cases-list').textContent = error.message;
+  }
+}
+
+$('#case-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  try {
+    await apiMutation('/api/investigations', 'POST', {
+      title: $('#case-title').value,
+      objective: $('#case-objective').value,
+      description: $('#case-description').value
+    });
+    event.target.reset();
+    setAuthMessage('Dossier enregistré.');
+    await loadCases();
+  } catch (error) { setAuthMessage(error.message, true); }
+});
+
+$('#cases-list').addEventListener('click', async event => {
+  const openButton = event.target.closest('[data-open-case]');
+  const archiveButton = event.target.closest('[data-archive-case]');
+  if (openButton) await openCase(openButton.dataset.openCase);
+  if (archiveButton) {
+    try {
+      await apiMutation(`/api/investigations/${encodeURIComponent(archiveButton.dataset.archiveCase)}`, 'PATCH', { status: 'archived' });
+      await loadCases();
+      setAuthMessage('Dossier archivé. Aucune donnée n’a été supprimée.');
+    } catch (error) { setAuthMessage(error.message, true); }
+  }
+});
+
+async function openCase(id) {
+  selectedCaseId = id;
+  try {
+    const [detail, notes, sources] = await Promise.all([
+      apiRequest(`/api/investigations/${encodeURIComponent(id)}`),
+      apiRequest(`/api/investigations/${encodeURIComponent(id)}/notes`),
+      apiRequest(`/api/investigations/${encodeURIComponent(id)}/sources`)
+    ]);
+    $('#detail-title').textContent = detail.investigation.title;
+    $('#notes-list').innerHTML = notes.notes.length ? notes.notes.map(note => `<div class="mini-record">${escapeHtml(note.body)}<small>${escapeHtml(new Date(note.created_at).toLocaleString())}</small></div>`).join('') : '<p class="loading">Aucune note.</p>';
+    $('#sources-list').innerHTML = sources.sources.length ? sources.sources.map(source => `<div class="mini-record"><b>${escapeHtml(source.source_name)}</b><small>${escapeHtml(source.reliability)} · ${escapeHtml(source.source_url || 'Sans URL')}</small></div>`).join('') : '<p class="loading">Aucune source.</p>';
+    $('#case-detail').hidden = false;
+    $('#case-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (error) { setAuthMessage(error.message, true); }
+}
+
+$('#close-case-detail').addEventListener('click', () => {
+  selectedCaseId = null;
+  $('#case-detail').hidden = true;
+});
+
+$('#note-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!selectedCaseId) return;
+  try {
+    await apiMutation(`/api/investigations/${encodeURIComponent(selectedCaseId)}/notes`, 'POST', { body: $('#note-body').value });
+    $('#note-body').value = '';
+    await openCase(selectedCaseId);
+    setAuthMessage('Note enregistrée.');
+  } catch (error) { setAuthMessage(error.message, true); }
+});
+
+$('#source-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!selectedCaseId) return;
+  try {
+    await apiMutation(`/api/investigations/${encodeURIComponent(selectedCaseId)}/sources`, 'POST', {
+      sourceName: $('#source-name').value,
+      sourceUrl: $('#source-url').value || null,
+      sourceType: 'web',
+      reliability: 'unknown'
+    });
+    $('#source-form').reset();
+    await openCase(selectedCaseId);
+    setAuthMessage('Source ajoutée au dossier.');
+  } catch (error) { setAuthMessage(error.message, true); }
+});
+
+$('#refresh-cases').addEventListener('click', loadCases);
+
 document.querySelectorAll('.nav').forEach(button => {
   button.addEventListener('click', () => {
     document.querySelectorAll('.nav').forEach(item => item.classList.remove('active'));
     button.classList.add('active');
-    const labels = {
-      overview: 'Vue d’ensemble',
-      investigations: 'Investigations — à développer',
-      graph: 'Graphe Intel — à développer',
-      sources: 'Sources & connecteurs — à développer'
-    };
+    const labels = { overview: 'Vue d’ensemble', investigations: 'Mes investigations', graph: 'Graphe Intel — à venir', sources: 'Sources & connecteurs — à venir' };
     $('#page-title').textContent = labels[button.dataset.view] || 'Vue d’ensemble';
-    if (button.dataset.view !== 'overview') {
-      alert('Cette fonction n’est pas encore disponible dans V1. Aucun résultat fictif ne sera affiché.');
+    if (button.dataset.view === 'investigations') {
+      $('#cases-panel').hidden = false;
+      ($('#account-active').hidden ? $('#account-panel') : $('#cases-panel')).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (button.dataset.view === 'graph' || button.dataset.view === 'sources') {
+      setAuthMessage('Ce module est encore en développement ; aucun résultat fictif ne sera affiché.');
+      $('#account-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      $('#account-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   });
 });
 
 loadStatus();
 loadModules();
+loadSession();
