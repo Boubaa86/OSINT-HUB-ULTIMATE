@@ -37,6 +37,7 @@ Ouvrir http://localhost:3000.
 - `GET /api/threat/ip/:address`, `/api/threat/domain/:domain`, `/api/threat/hash/:hash` — réputation VirusTotal/AbuseIPDB si les clés sont configurées.
 - `GET /api/reports/investigations/:id` — historique des rapports générés.
 - `POST /api/reports/investigations/:id` — génération PDF, HTML, JSON, CSV ou Markdown (CSRF requis).
+- `GET /api/ai/conversations`, `POST /api/ai/conversations`, `GET /api/ai/conversations/:id`, `POST /api/ai/conversations/:id/messages` — assistant IA et historique personnel.
 - `POST /api/auth/register` — création de compte.
 - `POST /api/auth/login` — ouverture de session.
 - `GET /api/auth/me` — compte et rôles de la session.
@@ -94,12 +95,13 @@ Le workflow GitHub Actions vérifie la syntaxe JavaScript et exécute les tests 
 - [x] API Center : statut des clés et tests de connexion pour VirusTotal, AbuseIPDB, Shodan, HIBP et OpenAI
 - [x] Threat Intelligence : routes IP/domaine/hash avec résultats explicitement non configurés si les clés manquent
 - [x] Report Generator : PDF, HTML, JSON, CSV et Markdown avec sources, notes, entités et relations
+- [x] AI OSINT Assistant : historique privé et Responses API, activé uniquement si OPENAI_API_KEY est configurée
 - [x] Tests unitaires pour les identifiants et tokens
 - [ ] Exécution des migrations sur la base Render OSINT
 - [ ] Tests d'intégration avec PostgreSQL et vérification multi-utilisateur
 - [x] Interface utilisateur de connexion, dossiers, notes, sources et archivage
 - [ ] Pseudonymes, image/OCR et flux de veille CERT
-- [ ] Filtres avancés, chronologie et regroupement IntelBase ; réputation hash étendue, IA et automatisations
+- [ ] Filtres avancés, chronologie et regroupement IntelBase ; réputation hash étendue et automatisations
 - [ ] Déploiement et tests de production
 
 ## Confidentialité et usage
