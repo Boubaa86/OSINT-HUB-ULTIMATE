@@ -254,6 +254,30 @@ $('#source-form').addEventListener('submit', async event => {
 
 $('#refresh-cases').addEventListener('click', loadCases);
 
+
+async function runIntelLookup(inputSelector, resultSelector, pathBuilder) {
+  const target = $(inputSelector).value.trim();
+  const box = $(resultSelector);
+  box.className = 'result';
+  box.textContent = 'Analyse des sources publiques…';
+  try {
+    const data = await apiRequest(pathBuilder(target));
+    box.innerHTML = `<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  } catch (error) {
+    box.textContent = error.message;
+  }
+}
+
+$('#domain-intel-form').addEventListener('submit', event => {
+  event.preventDefault();
+  runIntelLookup('#domain-intel-input', '#domain-intel-result', value => `/api/osint/domain/${encodeURIComponent(value)}`);
+});
+
+$('#ip-intel-form').addEventListener('submit', event => {
+  event.preventDefault();
+  runIntelLookup('#ip-intel-input', '#ip-intel-result', value => `/api/osint/ip/${encodeURIComponent(value)}`);
+});
+
 document.querySelectorAll('.nav').forEach(button => {
   button.addEventListener('click', () => {
     document.querySelectorAll('.nav').forEach(item => item.classList.remove('active'));
