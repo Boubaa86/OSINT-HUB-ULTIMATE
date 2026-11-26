@@ -30,6 +30,8 @@ Ouvrir http://localhost:3000.
 - `GET /api/osint/ip/:address` — RDAP et reverse DNS d'une IP publique (session requise).
 - `POST /api/osint/email` — syntaxe e-mail et enregistrements MX du domaine (session requise ; aucune vérification de boîte).
 - `POST /api/osint/phone` — formatage international et métadonnées du plan de numérotation (session requise ; aucune identification ou localisation).
+- `POST /api/search` — classification et recherche universelle sur les modules disponibles.
+- `GET /api/search/history` — historique personnel (uniquement les recherches enregistrées volontairement).
 - `POST /api/auth/register` — création de compte.
 - `POST /api/auth/login` — ouverture de session.
 - `GET /api/auth/me` — compte et rôles de la session.
@@ -83,12 +85,13 @@ Le workflow GitHub Actions vérifie la syntaxe JavaScript et exécute les tests 
 - [x] Formatage téléphone international sans recherche de propriétaire ou de position
 - [x] API IntelBase pour entités et relations obligatoirement sourcées
 - [x] Graphe interactif avec déplacement des nœuds, pan, zoom et exports SVG/PNG/JSON/CSV
+- [x] Global Search pour domaines, IP publiques, e-mails, téléphones, URL et classification de hash
 - [x] Tests unitaires pour les identifiants et tokens
 - [ ] Exécution des migrations sur la base Render OSINT
 - [ ] Tests d'intégration avec PostgreSQL et vérification multi-utilisateur
 - [ ] Interface utilisateur de connexion et gestion des dossiers
 - [ ] Pseudonymes, image et veille de menaces
-- [ ] Filtres avancés, chronologie et regroupement IntelBase ; recherche globale, IA, automatisations et rapports
+- [ ] Filtres avancés, chronologie et regroupement IntelBase ; intégrations réputation hash, IA, automatisations et rapports
 - [ ] Déploiement et tests de production
 
 ## Confidentialité et usage
