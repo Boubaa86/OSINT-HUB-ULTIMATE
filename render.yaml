@@ -21,6 +21,8 @@ services:
         value: "true"
       - key: PGSSLMODE
         value: require
+      - key: AUTOMATION_SECRET
+        generateValue: true
 databases:
   - name: osint-hub-db
     plan: free
