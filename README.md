@@ -28,6 +28,7 @@ Ouvrir http://localhost:3000.
 - `POST /api/osint/dns` — résolution DNS passive A/AAAA/MX/NS/TXT.
 - `GET /api/osint/domain/:domain` — DNS détaillé et noms de certificats CT publics (session requise).
 - `GET /api/osint/ip/:address` — RDAP et reverse DNS d'une IP publique (session requise).
+- `POST /api/osint/email` — syntaxe e-mail et enregistrements MX du domaine (session requise ; aucune vérification de boîte).
 - `POST /api/auth/register` — création de compte.
 - `POST /api/auth/login` — ouverture de session.
 - `GET /api/auth/me` — compte et rôles de la session.
@@ -74,11 +75,12 @@ Le workflow GitHub Actions vérifie la syntaxe JavaScript et exécute les tests 
 - [x] API de dossiers, notes, sources et archivage avec cloisonnement par propriétaire
 - [x] Analyse passive de domaines via DNS et Certificate Transparency
 - [x] Analyse d'IP publiques via RDAP et reverse DNS
+- [x] Vérification e-mail limitée à la syntaxe et aux DNS MX
 - [x] Tests unitaires pour les identifiants et tokens
 - [ ] Exécution des migrations sur la base Render OSINT
 - [ ] Tests d'intégration avec PostgreSQL et vérification multi-utilisateur
 - [ ] Interface utilisateur de connexion et gestion des dossiers
-- [ ] E-mail, téléphone, pseudonymes, image et veille de menaces
+- [ ] Téléphone, pseudonymes, image et veille de menaces
 - [ ] IntelBase, recherche globale, IA, automatisations et rapports
 - [ ] Déploiement et tests de production
 
