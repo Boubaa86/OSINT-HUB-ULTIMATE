@@ -13,6 +13,7 @@ import { createSearchRouter } from './routes/search.js';
 import { createIntegrationsRouter } from './routes/integrations.js';
 import { createThreatRouter } from './routes/threat.js';
 import { createReportsRouter } from './routes/reports.js';
+import { createAiRouter } from './routes/ai.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -44,6 +45,7 @@ app.use('/api/search', createSearchRouter());
 app.use('/api/integrations', createIntegrationsRouter());
 app.use('/api/threat', createThreatRouter());
 app.use('/api/reports', createReportsRouter());
+app.use('/api/ai', createAiRouter());
 
 const domainSchema = z.object({
   domain: z.string().trim().min(1).max(253).transform(value => value.toLowerCase())
@@ -83,6 +85,7 @@ app.get('/api/modules', (_req, res) => {
     { id: 'api-center', name: 'API Center', status: 'available', scope: 'État des clés et tests de connexion des fournisseurs' },
     { id: 'threat-intel', name: 'Threat Intelligence', status: 'available', scope: 'VirusTotal et AbuseIPDB si les clés sont configurées' },
     { id: 'report-generator', name: 'Report Generator', status: 'available', scope: 'PDF, HTML, JSON, CSV et Markdown' },
+    { id: 'ai-assistant', name: 'AI OSINT Assistant', status: process.env.OPENAI_API_KEY ? 'available' : 'planned', scope: 'Assistant source-grounded via Responses API' },
     { id: 'auth', name: 'Comptes & sessions', status: 'available', scope: 'Inscription, connexion, sessions sécurisées' },
     { id: 'case-management', name: 'Gestion des dossiers', status: 'available', scope: 'Dossiers privés, notes et sources' }
   ] });
