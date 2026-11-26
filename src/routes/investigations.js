@@ -208,7 +208,8 @@ export function createInvestigationsRouter() {
         if (!['http:', 'https:'].includes(parsedUrl.protocol) || parsedUrl.username || parsedUrl.password || parsedUrl.hostname === 'localhost') {
           return res.status(400).json({ error: 'URL publique HTTP(S) requise.' });
         }
-        if (ipaddr.isValid(parsedUrl.hostname) && ipaddr.parse(parsedUrl.hostname).range() !== 'unicast') {
+        const hostForRangeCheck = parsedUrl.hostname.replace(/^\\[|\\]$/g, '');
+        if (ipaddr.isValid(hostForRangeCheck) && ipaddr.parse(hostForRangeCheck).range() !== 'unicast') {
           return res.status(400).json({ error: 'Les URL vers des IP privées ou réservées sont refusées.' });
         }
       } catch { return res.status(400).json({ error: 'URL invalide.' }); }
@@ -232,6 +233,7 @@ export function createInvestigationsRouter() {
     const parsed = relationshipSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: 'Relation invalide. Une source et une justification sont obligatoires.' });
     const value = parsed.data;
+    if (value.fromEntityId === value.toEntityId) return res.status(400).json({ error: 'Une relation doit relier deux entités différentes.' });
     try {
       const owned = await pool.query('SELECT id FROM investigations WHERE id = $1 AND owner_id = $2', [req.params.id, req.user.id]);
       if (!owned.rowCount) return res.status(404).json({ error: 'Dossier introuvable.' });
