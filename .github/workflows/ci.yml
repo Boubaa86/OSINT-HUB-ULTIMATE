@@ -50,6 +50,8 @@ jobs:
           node --check src/providers/registry.js
           node --check src/providers/threat-intel.js
           node --check src/routes/threat.js
+          node --check src/routes/reports.js
+          node --check src/reports/generator.js
           node --check src/providers/certificate-transparency.js
           node --check src/providers/rdap.js
           node --check scripts/migrate.js
