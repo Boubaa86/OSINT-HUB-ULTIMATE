@@ -82,12 +82,13 @@ Le workflow GitHub Actions vérifie la syntaxe JavaScript et exécute les tests 
 - [x] Vérification e-mail limitée à la syntaxe et aux DNS MX
 - [x] Formatage téléphone international sans recherche de propriétaire ou de position
 - [x] API IntelBase pour entités et relations obligatoirement sourcées
+- [x] Graphe interactif avec déplacement des nœuds, pan, zoom et exports SVG/PNG/JSON/CSV
 - [x] Tests unitaires pour les identifiants et tokens
 - [ ] Exécution des migrations sur la base Render OSINT
 - [ ] Tests d'intégration avec PostgreSQL et vérification multi-utilisateur
 - [ ] Interface utilisateur de connexion et gestion des dossiers
 - [ ] Pseudonymes, image et veille de menaces
-- [ ] Visualisation interactive IntelBase, recherche globale, IA, automatisations et rapports
+- [ ] Filtres avancés, chronologie et regroupement IntelBase ; recherche globale, IA, automatisations et rapports
 - [ ] Déploiement et tests de production
 
 ## Confidentialité et usage
