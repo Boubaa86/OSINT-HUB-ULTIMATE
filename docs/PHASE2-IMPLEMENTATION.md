@@ -15,6 +15,7 @@ Date: 2026-11-26
 - API Center: configured/not-configured status and bounded connection tests for VirusTotal, AbuseIPDB, Shodan, HIBP and OpenAI. Censys configuration is detected but its automatic test remains unavailable.
 - Threat Intelligence: optional VirusTotal and AbuseIPDB lookups for public IPs, domains and hashes. Missing keys return not_configured, never fabricated scores.
 - Reports: PDF, HTML, JSON, CSV and Markdown generation; report metadata is stored in PostgreSQL, while generated files are streamed and not retained server-side.
+- AI assistant: owner-scoped conversation history and OpenAI Responses API integration, enabled only with a configured key. Case context is sent only when the user explicitly opts in.
 
 ## Security controls
 
@@ -41,7 +42,6 @@ Date: 2026-11-26
 - Image metadata, OCR, hashes and duplicate detection.
 - Public profile research through official/authorized sources only.
 - CERT/public threat feeds and richer reputation coverage.
--
 - Automation task scheduling and notifications.
 - Admin roles, quotas and audit event writes.
 - Additional reports and visualizations.
