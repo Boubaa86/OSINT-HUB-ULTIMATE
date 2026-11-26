@@ -1,0 +1,25 @@
+name: OSINT scheduled automations
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  run-due-automations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      OSINT_BASE_URL: ${{ secrets.OSINT_BASE_URL }}
+      OSINT_AUTOMATION_SECRET: ${{ secrets.OSINT_AUTOMATION_SECRET }}
+    steps:
+      - name: Trigger due passive monitoring tasks
+        if: env.OSINT_BASE_URL != '' && env.OSINT_AUTOMATION_SECRET != ''
+        run: |
+          curl --fail-with-body --retry 3 --retry-delay 15 --max-time 90 \
+            -X POST "${OSINT_BASE_URL%/}/api/automations/run-due" \
+            -H "Authorization: Bearer $OSINT_AUTOMATION_SECRET" \
+            -H "Accept: application/json"
+      - name: Explain missing configuration
+        if: env.OSINT_BASE_URL == '' || env.OSINT_AUTOMATION_SECRET == ''
+        run: echo "Scheduled automations are not active. Configure OSINT_BASE_URL and OSINT_AUTOMATION_SECRET in GitHub Actions secrets."
