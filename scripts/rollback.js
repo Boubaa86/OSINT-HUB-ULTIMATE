@@ -22,8 +22,10 @@ const pool = new Pool({
 const client = await pool.connect();
 try {
   await client.query('SELECT pg_advisory_lock(731904260)');
-  const applied = await client.query('SELECT version FROM schema_migrations ORDER BY applied_at DESC');
-  const latest = applied.rows.find(row => migrations.includes(row.version))?.version;
+  await client.query(`CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+  const applied = await client.query('SELECT version FROM schema_migrations');
+  const appliedVersions = new Set(applied.rows.map(row => row.version));
+  const latest = [...migrations].reverse().find(version => appliedVersions.has(version));
   if (!latest) {
     console.log('No known migration is applied. No changes made.');
     process.exitCode = 0;
