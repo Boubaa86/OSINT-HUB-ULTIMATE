@@ -10,4 +10,4 @@ Types d'entités autorisés : organisation, domaine, IP publique, URL HTTP(S), h
 
 Chaque relation doit relier deux entités du même dossier et référencer une source enregistrée dans ce dossier. Une justification et une confiance comprise entre 0 et 1 sont obligatoires. Les liens sans source, les liens vers d'autres dossiers et les relations d'une entité vers elle-même sont refusés.
 
-Les relations sont des observations documentées, pas des preuves automatiques de propriété ou de causalité. L'API de données est disponible. Le premier graphe web est maintenant interactif : déplacement des nœuds, déplacement de la vue, zoom molette et exports SVG/JSON. Les exports PNG/CSV, les filtres avancés, la chronologie et le regroupement automatique restent à développer.
+Les relations sont des observations documentées, pas des preuves automatiques de propriété ou de causalité. L'API de données est disponible. Le premier graphe web est maintenant interactif : déplacement des nœuds, déplacement de la vue, zoom molette et exports SVG/PNG/JSON/CSV. Les filtres avancés, la chronologie et le regroupement automatique restent à développer.
