@@ -59,6 +59,19 @@ test('account sessions and private case workflows are isolated by owner', { skip
   const cookie1 = reg1.response.headers.get('set-cookie').split(';')[0];
   const csrf1 = reg1.data.csrfToken;
 
+  const defaultSettings = await request('/api/settings', { cookie: cookie1 });
+  assert.equal(defaultSettings.response.status, 200);
+  assert.equal(defaultSettings.data.preferences.theme, 'dark');
+  const savedSettings = await request('/api/settings', {
+    method: 'PATCH', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ theme: 'light', sidebarCollapsed: true })
+  });
+  assert.equal(savedSettings.response.status, 200);
+  const settingsReadback = await request('/api/settings', { cookie: cookie1 });
+  assert.equal(settingsReadback.data.preferences.theme, 'light');
+  assert.equal(settingsReadback.data.preferences.sidebarCollapsed, true);
+
   const automation = await request('/api/automations', {
     method: 'POST', cookie: cookie1, csrf: csrf1,
     headers: { 'Content-Type': 'application/json' },
