@@ -19,6 +19,7 @@
     <button class="nav" data-view="threat">⚠ <span>Threat Intelligence</span></button>
     <button class="nav" data-view="ai">✧ <span>Assistant IA</span></button>
     <button class="nav" data-view="image">▧ <span>Image Intelligence</span></button>
+    <button class="nav" data-view="automation">⟳ <span>Automation</span></button>
     <div class="side-bottom"><div class="status-dot"></div><span>Serveur actif</span><small id="health">Vérification…</small></div>
   </aside>
   <main class="main">
@@ -178,6 +179,21 @@
         <button type="submit">Analyser l'image</button>
       </form>
       <div id="image-output" class="result empty">Les fichiers ne sont pas conservés ; seules les empreintes et métadonnées autorisées sont enregistrées.</div>
+    </section>
+    <section class="panel automation-panel" id="automation-panel" hidden>
+      <div class="panel-head"><div><div class="eyebrow">OSINT AUTOMATION</div><h3>Surveillance passive planifiée</h3></div><button id="refresh-automations" class="secondary-button" type="button">Actualiser</button></div>
+      <p>Surveillance DNS et Certificate Transparency uniquement. L'exécution périodique nécessite les secrets GitHub Actions configurés après le déploiement Render.</p>
+      <form id="automation-form" class="automation-form">
+        <label for="automation-type">TYPE DE SURVEILLANCE</label>
+        <select id="automation-type"><option value="dns_change">Changements DNS</option><option value="certificate_change">Nouveaux certificats publics</option></select>
+        <label for="automation-domain">DOMAINE AUTORISÉ</label><input id="automation-domain" maxlength="253" placeholder="exemple.com" required>
+        <label for="automation-frequency">FRÉQUENCE</label><select id="automation-frequency"><option value="hourly">Toutes les heures</option><option value="daily">Chaque jour</option><option value="weekly">Chaque semaine</option></select>
+        <label class="automation-consent"><input id="automation-authorized" type="checkbox" required> Je confirme être autorisé à surveiller ce domaine.</label>
+        <button type="submit">Créer la surveillance</button>
+      </form>
+      <div id="automation-list" class="automation-list"><p class="loading">Aucune tâche chargée.</p></div>
+      <div class="panel-head notification-heading"><h3>Notifications</h3><button id="refresh-notifications" class="secondary-button" type="button">Actualiser</button></div>
+      <div id="notifications-list" class="notifications-list"><p class="loading">Chargement des notifications…</p></div>
     </section>
     <footer><span>OSINT HUB ULTIMATE <b>·</b> BUILD 0.1.0</span><span>Usage légal uniquement · Respect de la vie privée</span></footer>
   </main>
