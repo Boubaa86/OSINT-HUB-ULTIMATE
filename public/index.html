@@ -20,6 +20,7 @@
     <button class="nav" data-view="ai">✧ <span>Assistant IA</span></button>
     <button class="nav" data-view="image">▧ <span>Image Intelligence</span></button>
     <button class="nav" data-view="automation">⟳ <span>Automation</span></button>
+    <button class="nav" id="admin-nav" data-view="admin" hidden>⚙ <span>Administration</span></button>
     <div class="side-bottom"><div class="status-dot"></div><span>Serveur actif</span><small id="health">Vérification…</small></div>
   </aside>
   <main class="main">
@@ -194,6 +195,14 @@
       <div id="automation-list" class="automation-list"><p class="loading">Aucune tâche chargée.</p></div>
       <div class="panel-head notification-heading"><h3>Notifications</h3><button id="refresh-notifications" class="secondary-button" type="button">Actualiser</button></div>
       <div id="notifications-list" class="notifications-list"><p class="loading">Chargement des notifications…</p></div>
+    </section>
+    <section class="panel admin-panel" id="admin-panel" hidden>
+      <div class="panel-head"><div><div class="eyebrow">ADMINISTRATION</div><h3>Gestion de la plateforme</h3></div><button id="refresh-admin" class="secondary-button" type="button">Actualiser</button></div>
+      <div id="admin-overview" class="admin-overview"></div>
+      <h4>Utilisateurs et rôles</h4>
+      <div id="admin-users" class="admin-users"><p class="loading">Chargement…</p></div>
+      <h4>Journal d'audit</h4>
+      <div id="admin-audit" class="admin-audit"><p class="loading">Chargement…</p></div>
     </section>
     <footer><span>OSINT HUB ULTIMATE <b>·</b> BUILD 0.1.0</span><span>Usage légal uniquement · Respect de la vie privée</span></footer>
   </main>
