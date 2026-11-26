@@ -47,6 +47,7 @@ function showSignedOut() {
   $('#cases-panel').hidden = true;
   $('#case-detail').hidden = true;
   $('#integrations-panel').hidden = true;
+  $('#threat-panel').hidden = true;
   $('#global-search-results').hidden = true;
 }
 
@@ -578,6 +579,30 @@ $('#providers-list').addEventListener('click', async event => {
 
 $('#refresh-providers').addEventListener('click', loadProviders);
 
+
+async function runThreatLookup(path) {
+  const output = $('#threat-output');
+  output.className = 'result';
+  output.textContent = 'Interrogation des fournisseurs de réputation configurés…';
+  try {
+    const data = await apiRequest(path);
+    output.innerHTML = `<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  } catch (error) { output.textContent = error.message; }
+}
+
+$('#threat-ip-form').addEventListener('submit', event => {
+  event.preventDefault();
+  runThreatLookup(`/api/threat/ip/${encodeURIComponent($('#threat-ip').value.trim())}`);
+});
+$('#threat-domain-form').addEventListener('submit', event => {
+  event.preventDefault();
+  runThreatLookup(`/api/threat/domain/${encodeURIComponent($('#threat-domain').value.trim())}`);
+});
+$('#threat-hash-form').addEventListener('submit', event => {
+  event.preventDefault();
+  runThreatLookup(`/api/threat/hash/${encodeURIComponent($('#threat-hash').value.trim())}`);
+});
+
 document.querySelectorAll('.nav').forEach(button => {
   button.addEventListener('click', () => {
     document.querySelectorAll('.nav').forEach(item => item.classList.remove('active'));
@@ -591,6 +616,14 @@ document.querySelectorAll('.nav').forEach(button => {
       if (selectedCaseId) loadGraph();
       else setAuthMessage('Ouvre un dossier, puis utilise « Voir le graphe » pour afficher ses entités sourcées.');
       $('#cases-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (button.dataset.view === 'threat') {
+      if ($('#account-active').hidden) {
+        setAuthMessage('Connecte-toi pour utiliser Threat Intelligence.');
+        $('#account-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        $('#threat-panel').hidden = false;
+        $('#threat-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     } else if (button.dataset.view === 'sources') {
       if ($('#account-active').hidden) {
         setAuthMessage('Connecte-toi pour consulter le centre API.');
