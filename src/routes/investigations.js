@@ -189,12 +189,15 @@ export function createInvestigationsRouter() {
     const parsed = entitySchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: 'Entité invalide.' });
     const value = parsed.data;
+    let canonicalValue = value.canonicalValue.trim();
+    if (value.entityType === 'domain') canonicalValue = canonicalValue.toLowerCase();
+    if (value.entityType === 'hash') canonicalValue = canonicalValue.toLowerCase();
     if (value.entityType === 'domain' && !/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$/i.test(value.canonicalValue)) {
       return res.status(400).json({ error: 'Nom de domaine invalide.' });
     }
     if (value.entityType === 'ip') {
       try {
-        if (!ipaddr.isValid(value.canonicalValue) || ipaddr.parse(value.canonicalValue).range() !== 'unicast') {
+        if (!ipaddr.isValid(canonicalValue) || ipaddr.parse(canonicalValue).range() !== 'unicast') {
           return res.status(400).json({ error: 'Seules les IP publiques sont acceptées dans IntelBase.' });
         }
       } catch { return res.status(400).json({ error: 'Adresse IP invalide.' }); }
@@ -205,15 +208,18 @@ export function createInvestigationsRouter() {
     if (value.entityType === 'url') {
       try {
         const parsedUrl = new URL(value.canonicalValue);
-        if (!['http:', 'https:'].includes(parsedUrl.protocol) || parsedUrl.username || parsedUrl.password || parsedUrl.hostname === 'localhost') {
+        const hostname = parsedUrl.hostname.replace(/^\\[|\\]$/g, '').toLowerCase();
+        if (!['http:', 'https:'].includes(parsedUrl.protocol) || parsedUrl.username || parsedUrl.password || hostname === 'localhost' || hostname.endsWith('.localhost') || hostname.endsWith('.local')) {
           return res.status(400).json({ error: 'URL publique HTTP(S) requise.' });
         }
         const hostForRangeCheck = parsedUrl.hostname.replace(/^\\[|\\]$/g, '');
         if (ipaddr.isValid(hostForRangeCheck) && ipaddr.parse(hostForRangeCheck).range() !== 'unicast') {
           return res.status(400).json({ error: 'Les URL vers des IP privées ou réservées sont refusées.' });
         }
+        canonicalValue = parsedUrl.toString();
       } catch { return res.status(400).json({ error: 'URL invalide.' }); }
     }
+    if (value.entityType === 'ip') canonicalValue = ipaddr.parse(canonicalValue).toNormalizedString();
     try {
       const owned = await pool.query('SELECT id FROM investigations WHERE id = $1 AND owner_id = $2', [req.params.id, req.user.id]);
       if (!owned.rowCount) return res.status(404).json({ error: 'Dossier introuvable.' });
@@ -223,7 +229,7 @@ export function createInvestigationsRouter() {
          ON CONFLICT (investigation_id, entity_type, canonical_value)
          DO UPDATE SET display_label = EXCLUDED.display_label, attributes = EXCLUDED.attributes, updated_at = NOW()
          RETURNING id, entity_type, canonical_value, display_label, attributes, created_at, updated_at`,
-        [req.params.id, value.entityType, value.canonicalValue, value.displayLabel, value.attributes]
+        [req.params.id, value.entityType, canonicalValue, value.displayLabel, value.attributes]
       );
       res.status(201).json({ entity: result.rows[0] });
     } catch (error) { next(error); }
