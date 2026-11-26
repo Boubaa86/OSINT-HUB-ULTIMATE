@@ -248,20 +248,54 @@ $('#cases-list').addEventListener('click', async event => {
 async function openCase(id) {
   selectedCaseId = id;
   try {
-    const [detail, notes, sources] = await Promise.all([
+    const [detail, notes, sources, reports] = await Promise.all([
       apiRequest(`/api/investigations/${encodeURIComponent(id)}`),
       apiRequest(`/api/investigations/${encodeURIComponent(id)}/notes`),
-      apiRequest(`/api/investigations/${encodeURIComponent(id)}/sources`)
+      apiRequest(`/api/investigations/${encodeURIComponent(id)}/sources`),
+      apiRequest(`/api/reports/investigations/${encodeURIComponent(id)}`)
     ]);
     $('#detail-title').textContent = detail.investigation.title;
     currentSources = sources.sources;
     $('#graph-view').hidden = true;
     $('#notes-list').innerHTML = notes.notes.length ? notes.notes.map(note => `<div class="mini-record">${escapeHtml(note.body)}<small>${escapeHtml(new Date(note.created_at).toLocaleString())}</small></div>`).join('') : '<p class="loading">Aucune note.</p>';
     $('#sources-list').innerHTML = sources.sources.length ? sources.sources.map(source => `<div class="mini-record"><b>${escapeHtml(source.source_name)}</b><small>${escapeHtml(source.reliability)} · ${escapeHtml(source.source_url || 'Sans URL')}</small></div>`).join('') : '<p class="loading">Aucune source.</p>';
+    $('#reports-list').innerHTML = reports.reports.length ? reports.reports.map(report => `<div class="mini-record"><b>${escapeHtml(report.title)}</b><small>${escapeHtml(report.format.toUpperCase())} · ${escapeHtml(new Date(report.created_at).toLocaleString())}</small></div>`).join('') : '<p class="loading">Aucun rapport généré.</p>';
     $('#case-detail').hidden = false;
     $('#case-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (error) { setAuthMessage(error.message, true); }
 }
+
+
+$('#report-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!selectedCaseId) return;
+  const format = $('#report-format').value;
+  const output = $('#report-message');
+  output.textContent = 'Génération du rapport…';
+  try {
+    if (!csrfToken) await refreshCsrf();
+    const response = await fetch(`/api/reports/investigations/${encodeURIComponent(selectedCaseId)}`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+      body: JSON.stringify({ format })
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || `Erreur HTTP ${response.status}`);
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `osint-report.${format === 'markdown' ? 'md' : format}`;
+    link.click();
+    URL.revokeObjectURL(url);
+    output.textContent = `Rapport ${format.toUpperCase()} généré. Référence : ${response.headers.get('X-Report-Id') || 'enregistrée'}`;
+    const reports = await apiRequest(`/api/reports/investigations/${encodeURIComponent(selectedCaseId)}`);
+    $('#reports-list').innerHTML = reports.reports.map(report => `<div class="mini-record"><b>${escapeHtml(report.title)}</b><small>${escapeHtml(report.format.toUpperCase())} · ${escapeHtml(new Date(report.created_at).toLocaleString())}</small></div>`).join('');
+  } catch (error) { output.textContent = error.message; }
+});
 
 $('#close-case-detail').addEventListener('click', () => {
   selectedCaseId = null;
