@@ -9,6 +9,7 @@ import { getDatabaseStatus } from './db.js';
 import { createAuthRouter } from './auth.js';
 import { createInvestigationsRouter } from './routes/investigations.js';
 import { createIntelligenceRouter } from './routes/intelligence.js';
+import { createSearchRouter } from './routes/search.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -36,6 +37,7 @@ app.use('/api', rateLimit({
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/api/auth', createAuthRouter());
 app.use('/api/investigations', createInvestigationsRouter());
+app.use('/api/search', createSearchRouter());
 
 const domainSchema = z.object({
   domain: z.string().trim().min(1).max(253).transform(value => value.toLowerCase())
@@ -71,6 +73,7 @@ app.get('/api/modules', (_req, res) => {
     { id: 'image', name: 'Analyse d’images', status: 'planned', scope: 'Métadonnées, dimensions et SHA-256' },
     { id: 'graph', name: 'Graphe interactif', status: 'planned', scope: 'Visualisation graphique à développer' },
     { id: 'intelbase-api', name: 'IntelBase — données sourcées', status: 'available', scope: 'Entités, relations, sources et confiance' },
+    { id: 'global-search', name: 'Global Search', status: 'available', scope: 'Classification et recherches DNS, IP, e-mail, téléphone et hash' },
     { id: 'auth', name: 'Comptes & sessions', status: 'available', scope: 'Inscription, connexion, sessions sécurisées' },
     { id: 'case-management', name: 'Gestion des dossiers', status: 'available', scope: 'Dossiers privés, notes et sources' }
   ] });
