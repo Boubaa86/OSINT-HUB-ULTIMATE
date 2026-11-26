@@ -1,0 +1,110 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+
+test('account sessions and private case workflows are isolated by owner', { skip: !process.env.DATABASE_URL }, async t => {
+  process.env.NODE_ENV = 'test';
+  const { app } = await import('../src/server.js');
+  const { pool } = await import('../src/db.js');
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise(resolve => server.once('listening', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const suffix = randomUUID();
+  const email1 = `analyst-${suffix}@example.test`;
+  const email2 = `other-${suffix}@example.test`;
+  let userId1 = null;
+  let userId2 = null;
+
+  async function request(path, { cookie, csrf, ...options } = {}) {
+    const headers = new Headers(options.headers || {});
+    if (cookie) headers.set('Cookie', cookie);
+    if (csrf) headers.set('X-CSRF-Token', csrf);
+    const response = await fetch(base + path, { ...options, headers });
+    const data = await response.json().catch(() => ({}));
+    return { response, data };
+  }
+
+  t.after(async () => {
+    if (userId1 || userId2) {
+      await pool.query('DELETE FROM users WHERE id = ANY($1::uuid[])', [[userId1, userId2].filter(Boolean)]);
+    }
+    await new Promise(resolve => server.close(resolve));
+    await pool.end();
+  });
+
+  const health = await request('/api/health');
+  assert.equal(health.response.status, 200);
+  const ready = await request('/api/ready');
+  assert.equal(ready.response.status, 200);
+
+  const reg1 = await request('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email1, displayName: 'Analyste test', password: 'Correct-Horse-Battery-42!' })
+  });
+  assert.equal(reg1.response.status, 201, JSON.stringify(reg1.data));
+  userId1 = reg1.data.user.id;
+  const cookie1 = reg1.response.headers.get('set-cookie').split(';')[0];
+  const csrf1 = reg1.data.csrfToken;
+
+  const noCsrf = await request('/api/investigations', {
+    method: 'POST', cookie: cookie1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: 'Dossier sans CSRF' })
+  });
+  assert.equal(noCsrf.response.status, 403);
+
+  const createCase = await request('/api/investigations', {
+    method: 'POST', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: 'Audit domaine de test', objective: 'Vérifier les DNS publics' })
+  });
+  assert.equal(createCase.response.status, 201, JSON.stringify(createCase.data));
+  const caseId = createCase.data.investigation.id;
+
+  const reg2 = await request('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email2, displayName: 'Autre utilisateur', password: 'Different-Horse-Battery-51!' })
+  });
+  assert.equal(reg2.response.status, 201, JSON.stringify(reg2.data));
+  userId2 = reg2.data.user.id;
+  const cookie2 = reg2.response.headers.get('set-cookie').split(';')[0];
+
+  const forbidden = await request(`/api/investigations/${caseId}`, { cookie: cookie2 });
+  assert.equal(forbidden.response.status, 404);
+
+  const note = await request(`/api/investigations/${caseId}/notes`, {
+    method: 'POST', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ body: 'Note de test vérifiée.' })
+  });
+  assert.equal(note.response.status, 201);
+
+  const source = await request(`/api/investigations/${caseId}/sources`, {
+    method: 'POST', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sourceName: 'Documentation de test', sourceUrl: 'https://example.com', reliability: 'unknown' })
+  });
+  assert.equal(source.response.status, 201);
+
+  const invalidId = await request('/api/investigations/not-a-uuid', { cookie: cookie1 });
+  assert.equal(invalidId.response.status, 400);
+
+  const archived = await request(`/api/investigations/${caseId}`, {
+    method: 'PATCH', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: 'archived' })
+  });
+  assert.equal(archived.response.status, 200);
+  assert.equal(archived.data.investigation.status, 'archived');
+
+  const logout = await request('/api/auth/logout', {
+    method: 'POST', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+  });
+  assert.equal(logout.response.status, 200);
+  const afterLogout = await request('/api/auth/me', { cookie: cookie1 });
+  assert.equal(afterLogout.response.status, 401);
+});
