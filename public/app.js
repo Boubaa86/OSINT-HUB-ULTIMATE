@@ -100,12 +100,8 @@ $('#global-search-form').addEventListener('submit', async event => {
   output.textContent = 'Identification du type de recherche et interrogation des sources compatibles…';
   try {
     const data = await apiMutation('/api/search', 'POST', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: $('#global-search-input').value.trim(),
-        saveToHistory: $('#save-search-history').checked
-      })
+      query: $('#global-search-input').value.trim(),
+      saveToHistory: $('#save-search-history').checked
     });
     output.innerHTML = `<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
     $('#global-search-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
