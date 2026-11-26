@@ -92,7 +92,7 @@ Le workflow GitHub Actions vérifie la syntaxe JavaScript et exécute les tests 
 - [x] Tests unitaires pour les identifiants et tokens
 - [ ] Exécution des migrations sur la base Render OSINT
 - [ ] Tests d'intégration avec PostgreSQL et vérification multi-utilisateur
-- [ ] Interface utilisateur de connexion et gestion des dossiers
+- [x] Interface utilisateur de connexion, dossiers, notes, sources et archivage
 - [ ] Pseudonymes, image et veille de menaces
 - [ ] Filtres avancés, chronologie et regroupement IntelBase ; intégrations réputation hash, IA, automatisations et rapports
 - [ ] Déploiement et tests de production
