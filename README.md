@@ -34,6 +34,7 @@ Ouvrir http://localhost:3000.
 - `GET /api/search/history` — historique personnel (uniquement les recherches enregistrées volontairement).
 - `GET /api/integrations` — état de configuration des fournisseurs, sans exposer les clés.
 - `POST /api/integrations/:provider/test` — test de connexion borné pour les fournisseurs configurés.
+- `GET /api/threat/ip/:address`, `/api/threat/domain/:domain`, `/api/threat/hash/:hash` — réputation VirusTotal/AbuseIPDB si les clés sont configurées.
 - `POST /api/auth/register` — création de compte.
 - `POST /api/auth/login` — ouverture de session.
 - `GET /api/auth/me` — compte et rôles de la session.
@@ -89,11 +90,12 @@ Le workflow GitHub Actions vérifie la syntaxe JavaScript et exécute les tests 
 - [x] Graphe interactif avec déplacement des nœuds, pan, zoom et exports SVG/PNG/JSON/CSV
 - [x] Global Search pour domaines, IP publiques, e-mails, téléphones, URL et classification de hash
 - [x] API Center : statut des clés et tests de connexion pour VirusTotal, AbuseIPDB, Shodan, HIBP et OpenAI
+- [x] Threat Intelligence : routes IP/domaine/hash avec résultats explicitement non configurés si les clés manquent
 - [x] Tests unitaires pour les identifiants et tokens
 - [ ] Exécution des migrations sur la base Render OSINT
 - [ ] Tests d'intégration avec PostgreSQL et vérification multi-utilisateur
 - [x] Interface utilisateur de connexion, dossiers, notes, sources et archivage
-- [ ] Pseudonymes, image et veille de menaces
+- [ ] Pseudonymes, image/OCR et flux de veille CERT
 - [ ] Filtres avancés, chronologie et regroupement IntelBase ; intégrations réputation hash, IA, automatisations et rapports
 - [ ] Déploiement et tests de production
 
