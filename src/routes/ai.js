@@ -64,23 +64,30 @@ function extractOutputText(body) {
 async function requestModel(input) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return { status: 'not_configured' };
-  const response = await fetch('https://api.openai.com/v1/responses', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    },
-    body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || 'gpt-6.2-astra',
-      instructions,
-      input,
-      max_output_tokens: 1400,
-      store: false
-    }),
-    signal: AbortSignal.timeout(30_000),
-    redirect: 'error'
-  });
+  let response;
+  try {
+    response = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        model: process.env.OPENAI_MODEL || 'gpt-6.2-astra',
+        instructions,
+        input,
+        max_output_tokens: 1400,
+        store: false
+      }),
+      signal: AbortSignal.timeout(30_000),
+      redirect: 'error'
+    });
+  } catch (error) {
+    return { status: 'unreachable', errorCode: error.name === 'TimeoutError' ? 'TIMEOUT' : 'NETWORK_ERROR' };
+  }
+  const declaredLength = Number(response.headers.get('content-length') || 0);
+  if (declaredLength > 1_000_000) return { status: 'response_too_large' };
   const text = await response.text();
   if (Buffer.byteLength(text, 'utf8') > 1_000_000) return { status: 'response_too_large' };
   let body = {};
