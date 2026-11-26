@@ -31,3 +31,17 @@
 .intel-tools form{margin:0}
 .intel-tools .result{max-height:260px}
 .intel-tools pre{white-space:pre-wrap;overflow-wrap:anywhere;font:10px/1.55 ui-monospace,SFMono-Regular,monospace;margin:0;color:#b8d5e8}
+
+.graph-view{margin:15px 0;padding:12px;border:1px solid #24516a;border-radius:10px;background:#071421}
+.graph-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#9db5c9;font-size:11px}
+.graph-toolbar>div{display:flex;gap:6px}
+#graph-svg{display:block;width:100%;height:420px;border:1px solid var(--line);border-radius:8px;background:radial-gradient(circle at center,#10283b 0,#081522 70%);touch-action:none;cursor:grab}
+#graph-svg:active{cursor:grabbing}
+.graph-edge{stroke:#3b809b;stroke-width:2;opacity:.8;marker-end:url(#graph-arrow)}
+#graph-svg marker path{fill:#6bcde0}
+.graph-node{cursor:grab;outline:none}
+.graph-node circle{fill:#123f59;stroke:#3ad7ec;stroke-width:2}
+.graph-node text{fill:#e8f7ff;font:12px system-ui,sans-serif;pointer-events:none}
+.graph-node:focus circle{stroke:#fff;stroke-width:3}
+.graph-help{display:block;color:var(--muted);font-size:10px;margin-top:8px}
+@media(max-width:620px){#graph-svg{height:320px}.graph-toolbar{align-items:flex-start;flex-direction:column}}
