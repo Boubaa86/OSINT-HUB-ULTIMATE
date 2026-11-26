@@ -51,6 +51,7 @@ function showAccount(user) {
   $('#cases-panel').hidden = false;
   $('#account-name').textContent = user.displayName || user.display_name || 'Compte connecté';
   $('#account-email').textContent = user.email || '';
+  $('#admin-nav').hidden = !(Array.isArray(user.roles) && user.roles.includes('admin'));
   loadDashboard();
 }
 
@@ -66,6 +67,8 @@ function showSignedOut() {
   $('#ai-panel').hidden = true;
   $('#image-panel').hidden = true;
   $('#automation-panel').hidden = true;
+  $('#admin-panel').hidden = true;
+  $('#admin-nav').hidden = true;
   $('#global-search-results').hidden = true;
 }
 
@@ -863,11 +866,62 @@ $('#notifications-list').addEventListener('click', async event => {
 $('#refresh-automations').addEventListener('click', loadAutomations);
 $('#refresh-notifications').addEventListener('click', loadNotifications);
 
+
+async function loadAdmin() {
+  try {
+    const [overview, users, audit] = await Promise.all([
+      apiRequest('/api/admin/overview'),
+      apiRequest('/api/admin/users'),
+      apiRequest('/api/admin/audit')
+    ]);
+    $('#admin-overview').innerHTML = [
+      ['Utilisateurs', overview.users.total],
+      ['Actifs', overview.users.active],
+      ['Dossiers', overview.investigations],
+      ['Rapports', overview.reports],
+      ['Automatisations actives', overview.automations.enabled],
+      ['Échecs 24 h', overview.failedAutomationRunsLast24h]
+    ].map(([label, value]) => `<article><small>${escapeHtml(label)}</small><b>${escapeHtml(value)}</b></article>`).join('');
+    $('#admin-users').innerHTML = users.users.map(user => `
+      <article class="admin-user" data-admin-user="${escapeHtml(user.id)}">
+        <div><b>${escapeHtml(user.display_name)}</b><small>${escapeHtml(user.email)} · ${escapeHtml(user.status)}</small></div>
+        <div class="admin-user-controls">
+          <select data-role-select aria-label="Rôle de ${escapeHtml(user.email)}">
+            <option value="user" ${user.roles.includes('admin') ? '' : user.roles.includes('analyst') ? '' : 'selected'}>Utilisateur</option>
+            <option value="analyst" ${user.roles.includes('analyst') ? 'selected' : ''}>Analyste</option>
+            <option value="admin" ${user.roles.includes('admin') ? 'selected' : ''}>Administrateur</option>
+          </select>
+          <button type="button" data-save-role>Enregistrer rôle</button>
+          <button type="button" class="secondary-button" data-toggle-status data-status="${escapeHtml(user.status)}">${user.status === 'active' ? 'Désactiver' : 'Activer'}</button>
+        </div>
+      </article>`).join('');
+    $('#admin-audit').innerHTML = audit.events.map(item => `
+      <div class="audit-item"><b>${escapeHtml(item.action)}</b><span>${escapeHtml(item.actor_email || 'Système')} · ${escapeHtml(item.resource_type || '')} · ${escapeHtml(new Date(item.created_at).toLocaleString())}</span></div>`).join('') || '<p class="loading">Aucun événement.</p>';
+  } catch (error) { $('#admin-overview').textContent = error.message; }
+}
+
+$('#admin-users').addEventListener('click', async event => {
+  const card = event.target.closest('[data-admin-user]');
+  if (!card) return;
+  try {
+    if (event.target.closest('[data-save-role]')) {
+      const role = card.querySelector('[data-role-select]').value;
+      await apiMutation(`/api/admin/users/${encodeURIComponent(card.dataset.adminUser)}/roles`, 'PATCH', { roles: [role] });
+      await loadAdmin();
+    } else if (event.target.closest('[data-toggle-status]')) {
+      const status = event.target.dataset.status === 'active' ? 'disabled' : 'active';
+      await apiMutation(`/api/admin/users/${encodeURIComponent(card.dataset.adminUser)}/status`, 'PATCH', { status });
+      await loadAdmin();
+    }
+  } catch (error) { setAuthMessage(error.message, true); }
+});
+$('#refresh-admin').addEventListener('click', loadAdmin);
+
 document.querySelectorAll('.nav').forEach(button => {
   button.addEventListener('click', () => {
     document.querySelectorAll('.nav').forEach(item => item.classList.remove('active'));
     button.classList.add('active');
-    const labels = { overview: 'Vue d’ensemble', investigations: 'Mes investigations', graph: 'IntelBase Pro', sources: 'API Center', threat: 'Threat Intelligence', ai: 'Assistant IA', image: 'Image Intelligence', automation: 'Automation' };
+    const labels = { overview: 'Vue d’ensemble', investigations: 'Mes investigations', graph: 'IntelBase Pro', sources: 'API Center', threat: 'Threat Intelligence', ai: 'Assistant IA', image: 'Image Intelligence', automation: 'Automation', admin: 'Administration' };
     $('#page-title').textContent = labels[button.dataset.view] || 'Vue d’ensemble';
     if (button.dataset.view === 'investigations') {
       $('#cases-panel').hidden = false;
@@ -876,6 +930,14 @@ document.querySelectorAll('.nav').forEach(button => {
       if (selectedCaseId) loadGraph();
       else setAuthMessage('Ouvre un dossier, puis utilise « Voir le graphe » pour afficher ses entités sourcées.');
       $('#cases-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (button.dataset.view === 'admin') {
+      if ($('#admin-nav').hidden) {
+        setAuthMessage('Accès administrateur requis.');
+      } else {
+        $('#admin-panel').hidden = false;
+        loadAdmin();
+        $('#admin-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     } else if (button.dataset.view === 'automation') {
       if ($('#account-active').hidden) {
         setAuthMessage('Connecte-toi pour gérer les automatisations.');
