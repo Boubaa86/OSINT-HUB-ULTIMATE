@@ -43,7 +43,12 @@ jobs:
           node --check src/auth.js
           node --check src/security/credentials.js
           node --check src/routes/investigations.js
+          node --check src/routes/intelligence.js
+          node --check src/providers/certificate-transparency.js
+          node --check src/providers/rdap.js
           node --check scripts/migrate.js
+          node --check test/api.integration.test.js
+          node --check test/intelligence.test.js
           node --check public/app.js
           node --check www/app.js
       - name: Apply database migrations
