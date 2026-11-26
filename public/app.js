@@ -792,7 +792,9 @@ async function loadAutomations() {
         <div class="automation-actions">
           <button type="button" data-run-task="${escapeHtml(task.id)}">Exécuter maintenant</button>
           <button type="button" class="secondary-button" data-toggle-task="${escapeHtml(task.id)}" data-enabled="${task.enabled ? 'true' : 'false'}">${task.enabled ? 'Désactiver' : 'Activer'}</button>
+          <button type="button" class="secondary-button" data-view-runs="${escapeHtml(task.id)}">Historique</button>
         </div>
+        <div class="automation-runs"></div>
       </article>`).join('') : '<p class="loading">Aucune surveillance créée.</p>';
   } catch (error) { list.textContent = error.message; }
 }
@@ -827,6 +829,7 @@ $('#automation-form').addEventListener('submit', async event => {
 $('#automation-list').addEventListener('click', async event => {
   const runButton = event.target.closest('[data-run-task]');
   const toggleButton = event.target.closest('[data-toggle-task]');
+  const historyButton = event.target.closest('[data-view-runs]');
   try {
     if (runButton) {
       runButton.disabled = true;
@@ -835,6 +838,10 @@ $('#automation-list').addEventListener('click', async event => {
       await loadAutomations();
       await loadNotifications();
       setAuthMessage(result.result.status === 'completed' ? 'Surveillance exécutée.' : 'La surveillance a échoué.', result.result.status !== 'completed');
+    } else if (historyButton) {
+      const card = historyButton.closest('[data-task-card]');
+      const data = await apiRequest(`/api/automations/${encodeURIComponent(historyButton.dataset.viewRuns)}/runs`);
+      card.querySelector('.automation-runs').innerHTML = data.runs.length ? data.runs.map(run => `<small>${escapeHtml(run.status)} · ${run.changed ? 'changement détecté' : 'aucun changement'} · ${escapeHtml(new Date(run.finished_at).toLocaleString())}</small>`).join('<br>') : '<small>Aucune exécution.</small>';
     } else if (toggleButton) {
       await apiMutation(`/api/automations/${encodeURIComponent(toggleButton.dataset.toggleTask)}`, 'PATCH', {
         enabled: toggleButton.dataset.enabled !== 'true'
