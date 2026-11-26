@@ -8,7 +8,7 @@ BEGIN
     'user_settings','audit_logs','automation_tasks','notifications','api_integrations',
     'reports','intelligence_relationships','intelligence_entities','search_results',
     'search_history','investigation_sources','investigation_notes','investigations',
-    'user_sessions','user_roles','users','roles'
+    'user_sessions','user_roles','users'
   ]
   LOOP
     EXECUTE format('SELECT COUNT(*) FROM %I', table_name) INTO row_count;
@@ -35,3 +35,4 @@ DROP TABLE IF EXISTS user_sessions;
 DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS roles;
+DELETE FROM schema_migrations WHERE version = '001_initial_schema';
