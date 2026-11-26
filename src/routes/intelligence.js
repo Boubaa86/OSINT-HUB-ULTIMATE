@@ -2,6 +2,7 @@ import { Router } from 'express';
 import dns from 'node:dns/promises';
 import ipaddr from 'ipaddr.js';
 import { z } from 'zod';
+import { rateLimit } from 'express-rate-limit';
 import { requireAuth } from '../auth.js';
 import { lookupCertificateNames } from '../providers/certificate-transparency.js';
 import { lookupRdapIp } from '../providers/rdap.js';
@@ -42,6 +43,7 @@ async function dnsRecords(domain) {
 export function createIntelligenceRouter() {
   const router = Router();
   router.use(requireAuth);
+  router.use(rateLimit({ windowMs: 60_000, limit: 8, standardHeaders: 'draft-8', legacyHeaders: false }));
 
   router.get('/domain/:domain', async (req, res, next) => {
     const parsed = domainSchema.safeParse(req.params.domain);
