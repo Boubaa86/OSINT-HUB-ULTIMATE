@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import dns from 'node:dns/promises';
 import ipaddr from 'ipaddr.js';
+import { parsePhoneNumberFromString } from 'libphonenumber-js/max';
 import { z } from 'zod';
 import { rateLimit } from 'express-rate-limit';
 import { requireAuth } from '../auth.js';
@@ -45,6 +46,30 @@ export function createIntelligenceRouter() {
   const router = Router();
   router.use(requireAuth);
   router.use(rateLimit({ windowMs: 60_000, limit: 8, standardHeaders: 'draft-8', legacyHeaders: false }));
+
+  router.post('/phone', async (req, res) => {
+    const parsed = z.object({
+      phone: z.string().trim().min(3).max(40),
+      defaultCountry: z.string().trim().length(2).toUpperCase().optional()
+    }).safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: 'Numéro de téléphone invalide.' });
+    const phone = parsePhoneNumberFromString(parsed.data.phone, parsed.data.defaultCountry);
+    if (!phone || !phone.isPossible()) {
+      return res.status(400).json({ error: 'Numéro impossible à interpréter avec les informations fournies.' });
+    }
+    res.json({
+      input: parsed.data.phone,
+      international: phone.formatInternational(),
+      national: phone.formatNational(),
+      country: phone.country || null,
+      callingCode: phone.countryCallingCode,
+      numberType: phone.getType() || 'unknown',
+      validAccordingToNumberingPlan: phone.isValid(),
+      source: 'libphonenumber-js numbering metadata',
+      collectedAt: new Date().toISOString(),
+      caveat: 'Ces métadonnées décrivent le plan de numérotation. Elles ne révèlent ni le propriétaire, ni la position, ni l’opérateur actuel du numéro.'
+    });
+  });
 
   router.post('/email', async (req, res) => {
     const parsed = z.object({ email: emailSchema }).safeParse(req.body);
