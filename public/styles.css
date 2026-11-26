@@ -137,3 +137,5 @@
 .notification-item p{margin:4px 0;font-size:11px;color:#9db3c7}
 .notification-item.unread{border-color:#2a728b;background:#0b2030}
 @media(max-width:620px){.notification-item{grid-template-columns:1fr}.automation-actions button{flex:1}}
+
+.automation-runs{display:grid;gap:4px;padding-top:5px}.automation-runs small{font-size:10px;color:#9fc3d6}
