@@ -50,7 +50,7 @@ test('account sessions and private case workflows are isolated by owner', { skip
   const cookie1 = reg1.response.headers.get('set-cookie').split(';')[0];
   const csrf1 = reg1.data.csrfToken;
 
-  const threatHash = await request('/api/threat/hash/${'b'.repeat(64)}', { cookie: cookie1 });
+  const threatHash = await request('/api/threat/hash/' + 'b'.repeat(64), { cookie: cookie1 });
   assert.equal(threatHash.response.status, 200);
   assert.equal(threatHash.data.status, 'not_configured');
   const privateThreatIp = await request('/api/threat/ip/127.0.0.1', { cookie: cookie1 });
