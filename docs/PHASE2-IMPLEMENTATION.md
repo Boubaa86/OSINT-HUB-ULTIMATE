@@ -29,7 +29,7 @@ Date: 2026-11-26
 
 ## Validation status
 
-- PostgreSQL migration execution and schema creation are part of CI.
+- PostgreSQL migrations 001 and 002 are applied in order by CI; guarded reverse migrations require explicit confirmation and refuse to drop non-empty data.
 - API integration tests cover account registration, CSRF, owner isolation, notes, sources, graph entities/relations, search history, provider configuration, threat not-configured behavior and report generation.
 - The first CI run completed migration but its API test process did not finish. The integration suite was then separated from unit tests, given request and test timeouts, and the workflow was updated. A fresh completed CI result is still required before calling the current branch fully tested.
 - No OSINT Render service or database has been provisioned.
@@ -41,7 +41,7 @@ Date: 2026-11-26
 - Image metadata, OCR, hashes and duplicate detection.
 - Public profile research through official/authorized sources only.
 - CERT/public threat feeds and richer reputation coverage.
-- AI assistant with sourced fact/hypothesis separation.
+-
 - Automation task scheduling and notifications.
 - Admin roles, quotas and audit event writes.
 - Additional reports and visualizations.
