@@ -113,6 +113,9 @@ export function createAuthRouter() {
         [email, parsed.data.displayName, passwordHash]
       );
       const user = inserted.rows[0];
+      const roles = ['user'];
+      const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(value => value.trim().toLowerCase()).filter(Boolean);
+      if (adminEmails.includes(user.email.toLowerCase())) roles.push('admin');
       await client.query(
         `INSERT INTO user_roles(user_id, role_id)
          SELECT $1, id FROM roles WHERE role_key = 'user'
@@ -121,7 +124,7 @@ export function createAuthRouter() {
       );
       const csrfToken = await issueSession(client, user.id, res);
       await client.query('COMMIT');
-      res.status(201).json({ user, csrfToken });
+      res.status(201).json({ user: { ...user, roles }, csrfToken });
     } catch (error) {
       await client.query('ROLLBACK');
       if (error.code === '23505') return res.status(409).json({ error: 'Cette adresse e-mail est déjà utilisée.' });
@@ -137,17 +140,22 @@ export function createAuthRouter() {
     if (!pool) return res.status(503).json({ error: 'Connexion indisponible : base de données non configurée.' });
     try {
       const result = await pool.query(
-        'SELECT id, email, display_name, password_hash FROM users WHERE LOWER(email) = LOWER($1) AND status = $2',
+        `SELECT id, email, display_name, password_hash,
+                COALESCE((SELECT array_agg(r.role_key) FROM user_roles ur JOIN roles r ON r.id = ur.role_id WHERE ur.user_id = users.id), ARRAY[]::text[]) AS roles
+         FROM users WHERE LOWER(email) = LOWER($1) AND status = $2`,
         [parsed.data.email, 'active']
       );
       const user = result.rows[0];
       if (!user || !(await verifyPassword(parsed.data.password, user.password_hash))) {
         return res.status(401).json({ error: 'Adresse e-mail ou mot de passe incorrect.' });
       }
+      const roles = user.roles || [];
+      const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(value => value.trim().toLowerCase()).filter(Boolean);
+      if (adminEmails.includes(user.email.toLowerCase()) && !roles.includes('admin')) roles.push('admin');
       const client = await pool.connect();
       try {
         const csrfToken = await issueSession(client, user.id, res);
-        res.json({ user: { id: user.id, email: user.email, display_name: user.display_name }, csrfToken });
+        res.json({ user: { id: user.id, email: user.email, display_name: user.display_name, roles }, csrfToken });
       } finally {
         client.release();
       }
