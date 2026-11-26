@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import sharp from 'sharp';
 
 test('account sessions and private case workflows are isolated by owner', { skip: !process.env.DATABASE_URL, timeout: 90_000 }, async t => {
   process.env.NODE_ENV = 'test';
@@ -42,6 +43,8 @@ test('account sessions and private case workflows are isolated by owner', { skip
   const aiSchema = await pool.query("SELECT to_regclass('public.ai_conversations') AS conversations, to_regclass('public.ai_messages') AS messages");
   assert.ok(aiSchema.rows[0].conversations);
   assert.ok(aiSchema.rows[0].messages);
+  const imageSchema = await pool.query("SELECT to_regclass('public.image_records') AS images");
+  assert.ok(imageSchema.rows[0].images);
 
   t.diagnostic('Registering first user');
   const reg1 = await request('/api/auth/register', {
@@ -174,6 +177,29 @@ test('account sessions and private case workflows are isolated by owner', { skip
   assert.equal(graph.response.status, 200);
   assert.equal(graph.data.entities.length, 2);
   assert.equal(graph.data.relationships.length, 1);
+
+  const png = await sharp({ create: { width: 2, height: 2, channels: 3, background: { r: 70, g: 110, b: 150 } } }).png().toBuffer();
+  const imageForm = new FormData();
+  imageForm.append('image', new Blob([png], { type: 'image/png' }), 'sample.png');
+  imageForm.append('investigationId', caseId);
+  const imageAnalysis = await request('/api/osint/image', {
+    method: 'POST', cookie: cookie1, csrf: csrf1,
+    body: imageForm
+  });
+  assert.equal(imageAnalysis.response.status, 201, JSON.stringify(imageAnalysis.data));
+  assert.equal(imageAnalysis.data.file.mimeType, 'image/png');
+  assert.ok(imageAnalysis.data.sha256);
+  assert.equal(Object.hasOwn(imageAnalysis.data.metadata.exif, 'GPSLatitude'), false);
+
+  const duplicateForm = new FormData();
+  duplicateForm.append('image', new Blob([png], { type: 'image/png' }), 'sample-copy.png');
+  duplicateForm.append('investigationId', caseId);
+  const duplicateAnalysis = await request('/api/osint/image', {
+    method: 'POST', cookie: cookie1, csrf: csrf1,
+    body: duplicateForm
+  });
+  assert.equal(duplicateAnalysis.response.status, 201);
+  assert.equal(duplicateAnalysis.data.duplicateCount, 1);
 
   const generatedReport = await request(`/api/reports/investigations/${caseId}`, {
     method: 'POST', cookie: cookie1, csrf: csrf1,
