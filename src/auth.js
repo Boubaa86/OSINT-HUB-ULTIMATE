@@ -157,11 +157,7 @@ export function createAuthRouter() {
   });
 
   router.get('/me', requireAuth, async (req, res) => {
-    const roles = await pool.query(
-      'SELECT r.role_key FROM roles r JOIN user_roles ur ON ur.role_id = r.id WHERE ur.user_id = $1',
-      [req.user.id]
-    );
-    res.json({ user: req.user, roles: roles.rows.map(row => row.role_key) });
+    res.json({ user: req.user, roles: req.user.roles || [] });
   });
 
   router.get('/csrf', requireAuth, async (req, res, next) => {
