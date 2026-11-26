@@ -14,6 +14,7 @@ import { createIntegrationsRouter } from './routes/integrations.js';
 import { createThreatRouter } from './routes/threat.js';
 import { createReportsRouter } from './routes/reports.js';
 import { createAiRouter } from './routes/ai.js';
+import { createImageRouter } from './routes/images.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -78,7 +79,8 @@ app.get('/api/modules', (_req, res) => {
     { id: 'email-mx', name: 'E-mail syntaxe & MX', status: 'available', scope: 'Validation de syntaxe et DNS MX uniquement' },
     { id: 'phone-format', name: 'Téléphone international', status: 'available', scope: 'Format, pays et type selon le plan de numérotation' },
     { id: 'username', name: 'Pseudonymes publics', status: 'planned', scope: 'Profils publics via sources autorisées' },
-    { id: 'image', name: 'Analyse d’images', status: 'planned', scope: 'Métadonnées, dimensions et SHA-256' },
+    { id: 'image-metadata', name: 'Image metadata & hash', status: 'available', scope: 'EXIF sans GPS, dimensions, SHA-256, dHash et doublons' },
+    { id: 'image-ocr', name: 'OCR image', status: 'planned', scope: 'OCR à intégrer via moteur autorisé' },
     { id: 'graph', name: 'Graphe interactif', status: 'planned', scope: 'Visualisation graphique à développer' },
     { id: 'intelbase-api', name: 'IntelBase — données sourcées', status: 'available', scope: 'Entités, relations, sources et confiance' },
     { id: 'global-search', name: 'Global Search', status: 'available', scope: 'Classification et recherches DNS, IP, e-mail, téléphone et hash' },
@@ -123,6 +125,7 @@ app.post('/api/osint/dns', async (req, res) => {
   });
 });
 
+app.use('/api/osint/image', createImageRouter());
 app.use('/api/osint', createIntelligenceRouter());
 
 app.get('/', (_req, res) => {
