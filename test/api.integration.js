@@ -5,7 +5,7 @@ import sharp from 'sharp';
 
 test('account sessions and private case workflows are isolated by owner', { skip: !process.env.DATABASE_URL, timeout: 90_000 }, async t => {
   process.env.NODE_ENV = 'test';
-  for (const key of ['VIRUSTOTAL_API_KEY', 'ABUSEIPDB_API_KEY', 'SHODAN_API_KEY', 'CENSYS_API_ID', 'CENSYS_API_SECRET', 'HIBP_API_KEY', 'OPENAI_API_KEY', 'AUTOMATION_SECRET']) delete process.env[key];
+  for (const key of ['VIRUSTOTAL_API_KEY', 'ABUSEIPDB_API_KEY', 'SHODAN_API_KEY', 'CENSYS_API_ID', 'CENSYS_API_SECRET', 'HIBP_API_KEY', 'OPENAI_API_KEY', 'AUTOMATION_SECRET', 'ADMIN_EMAILS']) delete process.env[key];
   const { app } = await import('../src/server.js');
   const { pool } = await import('../src/db.js');
   const server = app.listen(0, '127.0.0.1');
