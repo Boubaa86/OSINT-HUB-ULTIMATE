@@ -16,96 +16,81 @@ cp .env.example .env
 # Renseigner DATABASE_URL avec une base OSINT dédiée
 npm run migrate
 npm run dev
-``
+```
 
 Ouvrir http://localhost:3000.
 
-## Routes existantes
+## Routes principales
 
-- `GET /api/health` — état de vie HTTP (ne dépend pas de PostgreSQL).
-- `GET /api/ready` — état de préparation, renvoie 503 si PostgreSQL n'est pas joignable.
+- `GET /api/health` — état de vie HTTP.
+- `GET /api/ready` — readiness PostgreSQL.
 - `GET /api/modules` — catalogue honnête des modules.
-- `POST /api/osint/dns` — résolution DNS passive A/AAAA/MX/NS/TXT.
-- `GET /api/osint/domain/:domain` — DNS détaillé et noms de certificats CT publics (session requise).
-- `GET /api/osint/ip/:address` — RDAP et reverse DNS d'une IP publique (session requise).
-- `POST /api/osint/email` — syntaxe e-mail et enregistrements MX du domaine (session requise ; aucune vérification de boîte).
-- `POST /api/osint/phone` — formatage international et métadonnées du plan de numérotation (session requise ; aucune identification ou localisation).
-- `POST /api/search` — classification et recherche universelle sur les modules disponibles.
-- `GET /api/search/history` — historique personnel (uniquement les recherches enregistrées volontairement).
-- `GET /api/integrations` — état de configuration des fournisseurs, sans exposer les clés.
-- `POST /api/integrations/:provider/test` — test de connexion borné pour les fournisseurs configurés.
-- `GET /api/threat/ip/:address`, `/api/threat/domain/:domain`, `/api/threat/hash/:hash` — réputation VirusTotal/AbuseIPDB si les clés sont configurées.
-- `GET /api/reports/investigations/:id` — historique des rapports générés.
-- `POST /api/reports/investigations/:id` — génération PDF, HTML, JSON, CSV ou Markdown (CSRF requis).
-- `GET /api/ai/conversations`, `POST /api/ai/conversations`, `GET /api/ai/conversations/:id`, `POST /api/ai/conversations/:id/messages` — assistant IA et historique personnel.
+- `POST /api/osint/dns` — DNS passif A/AAAA/MX/NS/TXT.
+- `GET /api/osint/domain/:domain` — DNS et noms de certificats CT publics.
+- `GET /api/osint/ip/:address` — RDAP et reverse DNS d'une IP publique.
+- `POST /api/osint/email` — syntaxe et DNS MX uniquement, aucune vérification de boîte.
+- `POST /api/osint/phone` — formatage et plan de numérotation, sans propriétaire ni localisation.
+- `POST /api/search` — recherche universelle sur les modules disponibles.
+- `GET /api/search/history` — historique personnel, uniquement si l'utilisateur l'a demandé.
+- `GET /api/integrations` et `POST /api/integrations/:provider/test` — état des fournisseurs et tests bornés.
+- `GET /api/threat/ip/:address`, `/api/threat/domain/:domain`, `/api/threat/hash/:hash` — VirusTotal/AbuseIPDB si les clés sont configurées.
+- `GET /api/reports/investigations/:id` et `POST /api/reports/investigations/:id` — historique et génération PDF, HTML, JSON, CSV ou Markdown.
+- `GET /api/ai/conversations`, `POST /api/ai/conversations`, `GET /api/ai/conversations/:id`, `POST /api/ai/conversations/:id/messages` — assistant IA et historique privé.
+- `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, `GET /api/auth/csrf`, `POST /api/auth/logout` — authentification.
+- `GET|POST /api/investigations`, `GET|PATCH /api/investigations/:id` — dossiers privés.
+- `GET|POST /api/investigations/:id/notes` et `GET|POST /api/investigations/:id/sources` — notes et sources.
+- `GET /api/investigations/:id/graph`, `POST /api/investigations/:id/entities`, `POST /api/investigations/:id/relationships` — données IntelBase sourcées.
 
-Le modèle IA utilise Responses API ; sans `OPENAI_API_KEY`, la génération renvoie explicitement « non configuré ». Les données d'un dossier ne sont transmises à OpenAI que si l'utilisateur coche l'option correspondante.
-- `POST /api/auth/register` — création de compte.
-- `POST /api/auth/login` — ouverture de session.
-- `GET /api/auth/me` — compte et rôles de la session.
-- `GET /api/auth/csrf` — renouvellement du jeton CSRF.
-- `POST /api/auth/logout` — fermeture de session (CSRF requis).
-- `GET /api/investigations` — liste privée des dossiers.
-- `POST /api/investigations` — création (session + CSRF requis).
-- `GET /api/investigations/:id` — détail d'un dossier appartenant à l'utilisateur.
-- `PATCH /api/investigations/:id` — modification / archivage (session + CSRF requis).
-- `GET|POST /api/investigations/:id/notes` — notes privées.
-- `GET /api/investigations/:id/graph` — entités et relations documentées.
-- `POST /api/investigations/:id/entities` — ajout d'entité typée.
-- `POST /api/investigations/:id/relationships` — relation avec source, justification et confiance obligatoires.
-- `GET|POST /api/investigations/:id/sources` — sources et fiabilité déclarée.
+Les mutations nécessitent le cookie de session et l'en-tête `x-csrf-token`. Les dossiers sont cloisonnés par propriétaire et ne disposent pas de route de suppression définitive : ils peuvent être archivés.
 
-Les mutations nécessitent le cookie de session et l'en-tête `x-csrf-token`. La session est conservée dans un cookie HttpOnly. Les dossiers ne disposent pas de route de suppression définitive : ils peuvent être archivés.
+## AI Assistant
+
+Le modèle par défaut est `gpt-6.2-astra`, configurable avec `OPENAI_MODEL`. Ajoute `OPENAI_API_KEY` uniquement dans les variables d'environnement Render. Sans cette clé, l'assistant renvoie explicitement « non configuré ». Le contexte d'un dossier n'est envoyé au modèle que si l'utilisateur coche l'option dédiée. L'historique de conversation est stocké dans PostgreSQL ; la requête API utilise `store: false`.
 
 ## PostgreSQL et migrations
 
-Les migrations sont explicites, transactionnelles et verrouillées par advisory lock. Elles ne s'exécutent jamais automatiquement au démarrage.
+Les migrations sont additives, ordonnées, transactionnelles et verrouillées par advisory lock. Elles ne s'exécutent jamais automatiquement au démarrage.
 
 ```bash
 npm run migrate
-``
+# Rollback explicite de la dernière migration, uniquement si ses tables sont vides :
+CONFIRM_ROLLBACK=002_ai_conversations npm run migrate:down
+```
 
-Voir [DB-MIGRATIONS.md](docs/DB-MIGRATIONS.md). La base doit être une base dédiée à OSINT HUB. Ne jamais utiliser la base Warworld/Dust Siege.
-
-## Déploiement Render
-
-Le fichier `render.yaml` propose un service Node et une base PostgreSQL distincte en région Frankfurt. Le Blueprint existe mais aucune ressource OSINT n'a encore été provisionnée. Examiner la durée de conservation de l'offre PostgreSQL gratuite avant validation. Les secrets restent dans les variables d'environnement Render.
+Le rollback refuse de supprimer les tables si elles contiennent des données. Voir [DB-MIGRATIONS.md](docs/DB-MIGRATIONS.md). Utilise une base OSINT dédiée, jamais la base Warworld/Dust Siege.
 
 ## Tests
 
 ```bash
 npm test
-``
+npm run test:integration # nécessite PostgreSQL
+```
 
-Le workflow GitHub Actions vérifie la syntaxe JavaScript et exécute les tests unitaires à chaque push sur la branche de développement et sur main.
+La CI installe PostgreSQL temporaire, applique les migrations, vérifie la syntaxe et exécute les tests unitaires et d'intégration.
+
+## Déploiement Render
+
+Le Blueprint propose un service Node et une base PostgreSQL distincte en région Frankfurt. Le Blueprint existe, mais aucune ressource OSINT n'a encore été provisionnée. Vérifie la durée de conservation de l'offre PostgreSQL gratuite avant validation. Les clés API restent dans les variables d'environnement Render.
 
 ## État actuel
 
-- [x] Tableau de bord et résolution DNS passive
-- [x] Audit technique et branches de sauvegarde / développement
-- [x] Pool PostgreSQL facultatif et endpoint de readiness
-- [x] Première migration additive pour comptes, sessions, dossiers, notes, sources, graphes, rapports, intégrations, notifications, automatisations et audit
-- [x] Inscription / connexion avec hachage PBKDF2-SHA256, sessions HttpOnly et jetons CSRF
-- [x] API de dossiers, notes, sources et archivage avec cloisonnement par propriétaire
-- [x] Analyse passive de domaines via DNS et Certificate Transparency
-- [x] Analyse d'IP publiques via RDAP et reverse DNS
-- [x] Vérification e-mail limitée à la syntaxe et aux DNS MX
-- [x] Formatage téléphone international sans recherche de propriétaire ou de position
-- [x] API IntelBase pour entités et relations obligatoirement sourcées
-- [x] Graphe interactif avec déplacement des nœuds, pan, zoom et exports SVG/PNG/JSON/CSV
-- [x] Global Search pour domaines, IP publiques, e-mails, téléphones, URL et classification de hash
-- [x] API Center : statut des clés et tests de connexion pour VirusTotal, AbuseIPDB, Shodan, HIBP et OpenAI
-- [x] Threat Intelligence : routes IP/domaine/hash avec résultats explicitement non configurés si les clés manquent
-- [x] Report Generator : PDF, HTML, JSON, CSV et Markdown avec sources, notes, entités et relations
-- [x] AI OSINT Assistant : historique privé et Responses API, activé uniquement si OPENAI_API_KEY est configurée
-- [x] Migrations ordonnées et rollback explicite protégé contre la suppression de données
-- [x] Tests unitaires pour les identifiants et tokens
-- [ ] Exécution des migrations sur la base Render OSINT
-- [ ] Tests d'intégration avec PostgreSQL et vérification multi-utilisateur
-- [x] Interface utilisateur de connexion, dossiers, notes, sources et archivage
-- [ ] Pseudonymes, image/OCR et flux de veille CERT
-- [ ] Filtres avancés, chronologie et regroupement IntelBase ; réputation hash étendue et automatisations
-- [ ] Déploiement et tests de production
+- [x] Dashboard et DNS passif.
+- [x] Comptes, sessions HttpOnly, hachage PBKDF2-SHA256 et CSRF.
+- [x] Dossiers, notes, sources et archivage avec contrôle du propriétaire.
+- [x] Analyse de domaines DNS/Certificate Transparency et IP publiques RDAP/PTR.
+- [x] Vérification e-mail syntaxe/MX et métadonnées téléphoniques.
+- [x] Global Search avec historique facultatif.
+- [x] IntelBase API et graphe interactif avec déplacement, pan, zoom et exports SVG/PNG/JSON/CSV.
+- [x] API Center et tests de connexion des fournisseurs.
+- [x] Threat Intelligence optionnelle via VirusTotal/AbuseIPDB.
+- [x] Rapports PDF, HTML, JSON, CSV et Markdown.
+- [x] Assistant IA Responses API avec historique privé et contexte dossier sur consentement explicite.
+- [x] Migrations 001/002 et rollback protégé.
+- [ ] Résultat CI final complet de la branche courante.
+- [ ] Exécution des migrations sur la base Render OSINT.
+- [ ] Déploiement et tests de production.
+- [ ] Tests AppMint sur Android.
+- [ ] Image/OCR, recherche de pseudonymes par sources autorisées, filtres/chronologie avancés, flux CERT, automatisations et administration.
 
 ## Confidentialité et usage
 
