@@ -50,6 +50,18 @@ test('account sessions and private case workflows are isolated by owner', { skip
   const cookie1 = reg1.response.headers.get('set-cookie').split(';')[0];
   const csrf1 = reg1.data.csrfToken;
 
+  const providers = await request('/api/integrations', { cookie: cookie1 });
+  assert.equal(providers.response.status, 200);
+  assert.ok(Array.isArray(providers.data.providers));
+  assert.equal(JSON.stringify(providers.data).includes('sk-'), false);
+  const providerTest = await request('/api/integrations/virustotal/test', {
+    method: 'POST', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+  });
+  assert.equal(providerTest.response.status, 200);
+  assert.equal(providerTest.data.status, 'not_configured');
+
   const hashSearch = await request('/api/search', {
     method: 'POST', cookie: cookie1, csrf: csrf1,
     headers: { 'Content-Type': 'application/json' },
