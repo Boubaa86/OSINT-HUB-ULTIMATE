@@ -7,6 +7,7 @@ import { requireAuth } from '../auth.js';
 import { lookupCertificateNames } from '../providers/certificate-transparency.js';
 import { lookupRdapIp } from '../providers/rdap.js';
 
+const emailSchema = z.string().trim().email().max(254);
 const domainSchema = z.string().trim().toLowerCase().max(253).regex(
   /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/,
   'Nom de domaine invalide'
@@ -44,6 +45,38 @@ export function createIntelligenceRouter() {
   const router = Router();
   router.use(requireAuth);
   router.use(rateLimit({ windowMs: 60_000, limit: 8, standardHeaders: 'draft-8', legacyHeaders: false }));
+
+  router.post('/email', async (req, res) => {
+    const parsed = z.object({ email: emailSchema }).safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: 'Adresse e-mail invalide.' });
+    const email = parsed.data.email.toLowerCase();
+    const domain = email.split('@').at(-1);
+    try {
+      const mx = await dns.resolveMx(domain);
+      res.json({
+        email,
+        syntaxValid: true,
+        domain,
+        mx: mx.sort((a, b) => a.priority - b.priority),
+        mxStatus: mx.length ? 'found' : 'not_found',
+        collectedAt: new Date().toISOString(),
+        source: 'DNS MX resolver',
+        caveat: 'Cette vérification confirme uniquement la syntaxe et la configuration MX du domaine. Elle ne vérifie pas l’existence de la boîte, son propriétaire ou une fuite de données.'
+      });
+    } catch (error) {
+      res.json({
+        email,
+        syntaxValid: true,
+        domain,
+        mx: [],
+        mxStatus: 'lookup_error',
+        errorCode: error.code || 'DNS_ERROR',
+        collectedAt: new Date().toISOString(),
+        source: 'DNS MX resolver',
+        caveat: 'Une erreur DNS ne prouve pas que la boîte e-mail existe ou non.'
+      });
+    }
+  });
 
   router.get('/domain/:domain', async (req, res, next) => {
     const parsed = domainSchema.safeParse(req.params.domain);
