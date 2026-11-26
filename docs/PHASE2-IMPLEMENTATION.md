@@ -18,6 +18,8 @@ Date: 2026-11-26 (extended module pass)
 - AI assistant: owner-scoped conversation history and OpenAI Responses API integration, enabled only with a configured key. Case context is sent only when the user explicitly opts in.
 - Image metadata: JPEG/PNG/WebP/TIFF validation, size and pixel limits, EXIF allowlist without GPS/serial numbers, SHA-256, dHash duplicate candidates, and metadata-only storage.
 - Automation: owner-scoped passive DNS/Certificate Transparency tasks, run history, in-app notifications and a 30-minute GitHub Actions worker. Periodic execution remains inactive until the two documented GitHub secrets are configured.
+- Administration: environment allowlist bootstrap, role-based user management, account enable/disable and audit log.
+- User settings: persistent theme and sidebar preferences.
 
 ## Security controls
 
@@ -44,7 +46,7 @@ Date: 2026-11-26 (extended module pass)
 - OCR and reverse-image search.
 - Public profile research through official/authorized sources only.
 - CERT/public threat feeds and richer reputation coverage.
-- Admin roles, quotas and audit event writes.
+- Quota management and broader audit event coverage.
 - Additional reports and visualizations.
 - Android API base URL integration and real-device test.
 - Render provisioning, migrations, deployment and post-deploy verification.
