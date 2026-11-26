@@ -13,8 +13,8 @@ async function loadReportData(investigationId, userId) {
   );
   if (!investigation.rowCount) return null;
   const [sources, notes, entities, relationships] = await Promise.all([
-    pool.query('SELECT source_name, source_url, source_type, collected_at, reliability, notes FROM investigation_sources WHERE investigation_id = $1 ORDER BY collected_at ASC', [investigationId]),
-    pool.query('SELECT body, created_at FROM investigation_notes WHERE investigation_id = $1 ORDER BY created_at ASC', [investigationId]),
+    pool.query('SELECT source_name, source_url, source_type, collected_at, reliability, notes FROM investigation_sources WHERE investigation_id = $1 ORDER BY collected_at ASC LIMIT 1000', [investigationId]),
+    pool.query('SELECT body, created_at FROM investigation_notes WHERE investigation_id = $1 ORDER BY created_at ASC LIMIT 1000', [investigationId]),
     pool.query('SELECT id, entity_type, canonical_value, display_label, attributes, created_at FROM intelligence_entities WHERE investigation_id = $1 ORDER BY created_at ASC', [investigationId]),
     pool.query(
       `SELECT r.from_entity_id, r.to_entity_id, r.relation_type, r.confidence, r.rationale, r.created_at,
@@ -76,7 +76,7 @@ export function createReportsRouter() {
       const filename = `osint-report-${reportId}`;
 
       res.setHeader('X-Report-Id', reportId);
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}.${parsed.data.format === 'markdown' ? 'md' : parsed.data.format}`);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}.${parsed.data.format === 'markdown' ? 'md' : parsed.data.format}"`);
 
       if (parsed.data.format === 'pdf') {
         res.setHeader('Content-Type', 'application/pdf');
