@@ -14,7 +14,7 @@ if (!process.env.DATABASE_URL) {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+  ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: true } : undefined,
   max: 1,
   connectionTimeoutMillis: 5000
 });
