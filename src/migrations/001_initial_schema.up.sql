@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS user_settings (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_email_lower ON users (LOWER(email));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users (LOWER(email));
 CREATE INDEX IF NOT EXISTS idx_sessions_user_expiry ON user_sessions (user_id, expires_at) WHERE revoked_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_investigations_owner_updated ON investigations (owner_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notes_investigation_created ON investigation_notes (investigation_id, created_at DESC);
