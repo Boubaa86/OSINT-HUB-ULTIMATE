@@ -18,6 +18,7 @@ import { createImageRouter } from './routes/images.js';
 import { createDashboardRouter } from './routes/dashboard.js';
 import { createAutomationsRouter } from './routes/automations.js';
 import { createNotificationsRouter } from './routes/notifications.js';
+import { createAdminRouter } from './routes/admin.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -53,6 +54,7 @@ app.use('/api/ai', createAiRouter());
 app.use('/api/dashboard', createDashboardRouter());
 app.use('/api/automations', createAutomationsRouter());
 app.use('/api/notifications', createNotificationsRouter());
+app.use('/api/admin', createAdminRouter());
 
 const domainSchema = z.object({
   domain: z.string().trim().min(1).max(253).transform(value => value.toLowerCase())
