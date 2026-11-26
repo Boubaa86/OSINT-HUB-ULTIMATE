@@ -1,6 +1,6 @@
 # AI OSINT Assistant
 
-The assistant uses the OpenAI Responses API (not the retired Assistants API). Default model: `gpt-6.2-astra`; override with `OPENAI_MODEL`. Set `OPENAI_API_KEY` only in Render environment variables.
+The assistant uses the OpenAI Responses API (not the retired Assistants API). Default model: `gpt-6.2-sol`; override with `OPENAI_MODEL`. Set `OPENAI_API_KEY` only in Render environment variables.
 
 Routes (authenticated; POST routes require CSRF):
 - `GET /api/ai/conversations`
