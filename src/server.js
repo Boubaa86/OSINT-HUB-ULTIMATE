@@ -6,12 +6,15 @@ import dns from 'node:dns/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getDatabaseStatus } from './db.js';
+import { createAuthRouter } from './auth.js';
+import { createInvestigationsRouter } from './routes/investigations.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 
 app.disable('x-powered-by');
+app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : false);
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -30,6 +33,8 @@ app.use('/api', rateLimit({
   legacyHeaders: false
 }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use('/api/auth', createAuthRouter());
+app.use('/api/investigations', createInvestigationsRouter());
 
 const domainSchema = z.object({
   domain: z.string().trim().min(1).max(253).transform(value => value.toLowerCase())
