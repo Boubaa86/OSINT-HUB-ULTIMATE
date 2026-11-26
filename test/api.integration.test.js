@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 
-test('account sessions and private case workflows are isolated by owner', { skip: !process.env.DATABASE_URL }, async t => {
+test('account sessions and private case workflows are isolated by owner', { skip: !process.env.DATABASE_URL }, { timeout: 90_000 }, async t => {
   process.env.NODE_ENV = 'test';
   const { app } = await import('../src/server.js');
   const { pool } = await import('../src/db.js');
@@ -19,7 +19,7 @@ test('account sessions and private case workflows are isolated by owner', { skip
     const headers = new Headers(options.headers || {});
     if (cookie) headers.set('Cookie', cookie);
     if (csrf) headers.set('X-CSRF-Token', csrf);
-    const response = await fetch(base + path, { ...options, headers });
+    const response = await fetch(base + path, { ...options, headers, signal: AbortSignal.timeout(10_000) });
     const data = await response.json().catch(() => ({}));
     return { response, data };
   }
@@ -28,15 +28,18 @@ test('account sessions and private case workflows are isolated by owner', { skip
     if (userId1 || userId2) {
       await pool.query('DELETE FROM users WHERE id = ANY($1::uuid[])', [[userId1, userId2].filter(Boolean)]);
     }
+    server.closeAllConnections?.();
     await new Promise(resolve => server.close(resolve));
     await pool.end();
   });
 
+  t.diagnostic('Checking health and database readiness');
   const health = await request('/api/health');
   assert.equal(health.response.status, 200);
   const ready = await request('/api/ready');
   assert.equal(ready.response.status, 200);
 
+  t.diagnostic('Registering first user');
   const reg1 = await request('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -54,6 +57,7 @@ test('account sessions and private case workflows are isolated by owner', { skip
   });
   assert.equal(noCsrf.response.status, 403);
 
+  t.diagnostic('Creating an investigation and checking CSRF');
   const createCase = await request('/api/investigations', {
     method: 'POST', cookie: cookie1, csrf: csrf1,
     headers: { 'Content-Type': 'application/json' },
@@ -62,6 +66,7 @@ test('account sessions and private case workflows are isolated by owner', { skip
   assert.equal(createCase.response.status, 201, JSON.stringify(createCase.data));
   const caseId = createCase.data.investigation.id;
 
+  t.diagnostic('Registering second user and checking owner isolation');
   const reg2 = await request('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -74,6 +79,7 @@ test('account sessions and private case workflows are isolated by owner', { skip
   const forbidden = await request(`/api/investigations/${caseId}`, { cookie: cookie2 });
   assert.equal(forbidden.response.status, 404);
 
+  t.diagnostic('Saving notes and sources');
   const note = await request(`/api/investigations/${caseId}/notes`, {
     method: 'POST', cookie: cookie1, csrf: csrf1,
     headers: { 'Content-Type': 'application/json' },
@@ -91,6 +97,7 @@ test('account sessions and private case workflows are isolated by owner', { skip
   const invalidId = await request('/api/investigations/not-a-uuid', { cookie: cookie1 });
   assert.equal(invalidId.response.status, 400);
 
+  t.diagnostic('Archiving dossier and revoking session');
   const archived = await request(`/api/investigations/${caseId}`, {
     method: 'PATCH', cookie: cookie1, csrf: csrf1,
     headers: { 'Content-Type': 'application/json' },
