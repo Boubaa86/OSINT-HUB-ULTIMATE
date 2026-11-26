@@ -26,6 +26,8 @@ Ouvrir http://localhost:3000.
 - `GET /api/ready` — état de préparation, renvoie 503 si PostgreSQL n'est pas joignable.
 - `GET /api/modules` — catalogue honnête des modules.
 - `POST /api/osint/dns` — résolution DNS passive A/AAAA/MX/NS/TXT.
+- `GET /api/osint/domain/:domain` — DNS détaillé et noms de certificats CT publics (session requise).
+- `GET /api/osint/ip/:address` — RDAP et reverse DNS d'une IP publique (session requise).
 - `POST /api/auth/register` — création de compte.
 - `POST /api/auth/login` — ouverture de session.
 - `GET /api/auth/me` — compte et rôles de la session.
@@ -70,11 +72,13 @@ Le workflow GitHub Actions vérifie la syntaxe JavaScript et exécute les tests 
 - [x] Première migration additive pour comptes, sessions, dossiers, notes, sources, graphes, rapports, intégrations, notifications, automatisations et audit
 - [x] Inscription / connexion avec hachage PBKDF2-SHA256, sessions HttpOnly et jetons CSRF
 - [x] API de dossiers, notes, sources et archivage avec cloisonnement par propriétaire
+- [x] Analyse passive de domaines via DNS et Certificate Transparency
+- [x] Analyse d'IP publiques via RDAP et reverse DNS
 - [x] Tests unitaires pour les identifiants et tokens
 - [ ] Exécution des migrations sur la base Render OSINT
 - [ ] Tests d'intégration avec PostgreSQL et vérification multi-utilisateur
 - [ ] Interface utilisateur de connexion et gestion des dossiers
-- [ ] Modules IP, e-mail, domaine étendu, image et menaces
+- [ ] E-mail, téléphone, pseudonymes, image et veille de menaces
 - [ ] IntelBase, recherche globale, IA, automatisations et rapports
 - [ ] Déploiement et tests de production
 
