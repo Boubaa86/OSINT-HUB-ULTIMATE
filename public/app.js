@@ -273,6 +273,21 @@ $('#domain-intel-form').addEventListener('submit', event => {
   runIntelLookup('#domain-intel-input', '#domain-intel-result', value => `/api/osint/domain/${encodeURIComponent(value)}`);
 });
 
+$('#email-intel-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const box = $('#email-intel-result');
+  box.className = 'result';
+  box.textContent = 'Vérification de la syntaxe et des enregistrements MX…';
+  try {
+    const data = await apiRequest('/api/osint/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: $('#email-intel-input').value.trim() })
+    });
+    box.innerHTML = `<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  } catch (error) { box.textContent = error.message; }
+});
+
 $('#ip-intel-form').addEventListener('submit', event => {
   event.preventDefault();
   runIntelLookup('#ip-intel-input', '#ip-intel-result', value => `/api/osint/ip/${encodeURIComponent(value)}`);
