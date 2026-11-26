@@ -19,7 +19,12 @@
     <div class="side-bottom"><div class="status-dot"></div><span>Serveur actif</span><small id="health">Vérification…</small></div>
   </aside>
   <main class="main">
-    <header><div><div class="eyebrow">CENTRE D'INVESTIGATION NUMÉRIQUE</div><h1 id="page-title">Vue d'ensemble</h1></div><div class="header-right"><span class="pill"><i></i> MODE SOURCES OUVERTES</span><div class="avatar">OH</div></div></header>
+    <header><div><div class="eyebrow">CENTRE D'INVESTIGATION NUMÉRIQUE</div><h1 id="page-title">Vue d'ensemble</h1></div><form id="global-search-form" class="global-search"><input id="global-search-input" maxlength="2048" placeholder="Domaine, IP, e-mail, téléphone, hash…" required><label><input id="save-search-history" type="checkbox"> Historique</label><button type="submit">Rechercher</button></form><div class="header-right"><span class="pill"><i></i> MODE SOURCES OUVERTES</span><div class="avatar">OH</div></div></header>
+    <section id="global-search-results" class="panel global-search-results" hidden>
+      <div class="panel-head"><h3>Résultats de recherche universelle</h3><button id="load-search-history" class="secondary-button" type="button">Historique</button></div>
+      <div id="global-search-output" class="result empty">Lance une recherche pour voir les sources compatibles.</div>
+      <div id="search-history-list" class="search-history-list" hidden></div>
+    </section>
     <section class="welcome"><div><div class="eyebrow cyan">WORKSPACE / FRANCE</div><h2>Bienvenue dans votre centre<br><em>de renseignement numérique.</em></h2><p>Recherchez, recoupez et documentez des informations issues de sources ouvertes.</p></div><div class="radar"><div class="radar-ring r1"></div><div class="radar-ring r2"></div><div class="radar-ring r3"></div><div class="radar-sweep"></div><span class="radar-center"></span></div></section>
     <section class="stats">
       <article><small>MODULES DISPONIBLES</small><strong id="module-count">—</strong><span>Connecteurs actifs en V1</span></article>
