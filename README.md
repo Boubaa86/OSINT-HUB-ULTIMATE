@@ -1,33 +1,83 @@
-# OSINT HUB ULTIMATE — V1 foundation
+# OSINT HUB ULTIMATE
 
-Privacy-respecting OSINT workspace scaffold. V1 includes a responsive dashboard, an Express API, health/status endpoints, a module catalogue, and passive public DNS lookups.
+Plateforme OSINT en développement progressif. Les modules annoncés comme disponibles correspondent à des routes réellement implémentées ; les autres restent explicitement marqués « à venir ».
 
-## Requirements
+## Exigences
+
 - Node.js 20+
+- PostgreSQL 14+
 - npm
 
-## Run locally
+## Développement local
+
 ```bash
 npm install
+cp .env.example .env
+# Renseigner DATABASE_URL avec une base OSINT dédiée
+npm run migrate
 npm run dev
-```
-Open http://localhost:3000. Health: `GET /api/health`. Modules: `GET /api/modules`. DNS: `POST /api/osint/dns` with `{"domain":"example.com"}`.
+``
 
-## Deployment
-The `render.yaml` Blueprint describes an independent Frankfurt web service and PostgreSQL database. Review the Render Blueprint plan before applying it. It must not reuse the existing Warworld database. Secrets belong in Render environment variables only.
+Ouvrir http://localhost:3000.
 
-## Current implementation status
-- [x] Project structure and Render Blueprint
-- [x] Responsive dark dashboard
-- [x] API health and module catalogue
-- [x] Passive DNS A/AAAA/MX/NS/TXT lookup
-- [x] Input validation, security headers, JSON size limit, API rate limit
-- [x] Android WebView-compatible static bundle in `www/`
-- [ ] Runtime dependency install and live server test
-- [ ] Render deployment and PostgreSQL provisioning
-- [ ] Authentication, persistent investigations, graph, provider connectors, AI and exports
+## Routes existantes
 
-This is a foundation, not yet the complete OSINT platform. Planned features are not presented as operational.
+- `GET /api/health` — état de vie HTTP (ne dépend pas de PostgreSQL).
+- `GET /api/ready` — état de préparation, renvoie 503 si PostgreSQL n'est pas joignable.
+- `GET /api/modules` — catalogue honnête des modules.
+- `POST /api/osint/dns` — résolution DNS passive A/AAAA/MX/NS/TXT.
+- `POST /api/auth/register` — création de compte.
+- `POST /api/auth/login` — ouverture de session.
+- `GET /api/auth/me` — compte et rôles de la session.
+- `GET /api/auth/csrf` — renouvellement du jeton CSRF.
+- `POST /api/auth/logout` — fermeture de session (CSRF requis).
+- `GET /api/investigations` — liste privée des dossiers.
+- `POST /api/investigations` — création (session + CSRF requis).
+- `GET /api/investigations/:id` — détail d'un dossier appartenant à l'utilisateur.
+- `PATCH /api/investigations/:id` — modification / archivage (session + CSRF requis).
+- `GET|POST /api/investigations/:id/notes` — notes privées.
+- `GET|POST /api/investigations/:id/sources` — sources et fiabilité déclarée.
 
-## Safety
-Only investigate information you are authorized to process. DNS results are observations, not proof of ownership or relationships. Do not use this project to identify private people, access accounts, track live locations, or bypass platform restrictions. Keep all API keys server-side.
+Les mutations nécessitent le cookie de session et l'en-tête `x-csrf-token`. La session est conservée dans un cookie HttpOnly. Les dossiers ne disposent pas de route de suppression définitive : ils peuvent être archivés.
+
+## PostgreSQL et migrations
+
+Les migrations sont explicites, transactionnelles et verrouillées par advisory lock. Elles ne s'exécutent jamais automatiquement au démarrage.
+
+```bash
+npm run migrate
+``
+
+Voir [DB-MIGRATIONS.md](docs/DB-MIGRATIONS.md). La base doit être une base dédiée à OSINT HUB. Ne jamais utiliser la base Warworld/Dust Siege.
+
+## Déploiement Render
+
+Le fichier `render.yaml` propose un service Node et une base PostgreSQL distincte en région Frankfurt. Le Blueprint existe mais aucune ressource OSINT n'a encore été provisionnée. Examiner la durée de conservation de l'offre PostgreSQL gratuite avant validation. Les secrets restent dans les variables d'environnement Render.
+
+## Tests
+
+```bash
+npm test
+``
+
+Le workflow GitHub Actions vérifie la syntaxe JavaScript et exécute les tests unitaires à chaque push sur la branche de développement et sur main.
+
+## État actuel
+
+- [x] Tableau de bord et résolution DNS passive
+- [x] Audit technique et branches de sauvegarde / développement
+- [x] Pool PostgreSQL facultatif et endpoint de readiness
+- [x] Première migration additive pour comptes, sessions, dossiers, notes, sources, graphes, rapports, intégrations, notifications, automatisations et audit
+- [x] Inscription / connexion avec hachage PBKDF2-SHA256, sessions HttpOnly et jetons CSRF
+- [x] API de dossiers, notes, sources et archivage avec cloisonnement par propriétaire
+- [x] Tests unitaires pour les identifiants et tokens
+- [ ] Exécution des migrations sur la base Render OSINT
+- [ ] Tests d'intégration avec PostgreSQL et vérification multi-utilisateur
+- [ ] Interface utilisateur de connexion et gestion des dossiers
+- [ ] Modules IP, e-mail, domaine étendu, image et menaces
+- [ ] IntelBase, recherche globale, IA, automatisations et rapports
+- [ ] Déploiement et tests de production
+
+## Confidentialité et usage
+
+Utiliser uniquement des sources ouvertes ou des données auxquelles tu es autorisé à accéder. Pas de recherche d'adresses privées, de suivi de localisation, d'accès à des comptes, de reconnaissance faciale, de contournement des règles des plateformes ou de scan actif non autorisé. Les relations et hypothèses doivent toujours être accompagnées de leurs sources, dates et limites.
