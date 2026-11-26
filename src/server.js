@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { getDatabaseStatus } from './db.js';
 import { createAuthRouter } from './auth.js';
 import { createInvestigationsRouter } from './routes/investigations.js';
+import { createIntelligenceRouter } from './routes/intelligence.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -62,7 +63,8 @@ app.get('/api/ready', async (_req, res) => {
 app.get('/api/modules', (_req, res) => {
   res.json({ modules: [
     { id: 'domain-dns', name: 'DNS public', status: 'available', scope: 'Résolution DNS passive' },
-    { id: 'ip-intel', name: 'Renseignement IP', status: 'planned', scope: 'Sources publiques et géolocalisation approximative' },
+    { id: 'domain-ct', name: 'Certificats de domaine', status: 'available', scope: 'Noms de certificats dans les journaux CT publics' },
+    { id: 'ip-intel', name: 'Renseignement IP', status: 'available', scope: 'RDAP public et reverse DNS pour IP publiques' },
     { id: 'email', name: 'Analyse e-mail', status: 'planned', scope: 'Syntaxe, domaine et API autorisées' },
     { id: 'username', name: 'Pseudonymes publics', status: 'planned', scope: 'Profils publics via sources autorisées' },
     { id: 'image', name: 'Analyse d’images', status: 'planned', scope: 'Métadonnées, dimensions et SHA-256' },
@@ -103,6 +105,8 @@ app.post('/api/osint/dns', async (req, res) => {
     caveat: 'Résultats DNS publics ; ils ne prouvent pas une propriété ou une relation entre entités.'
   });
 });
+
+app.use('/api/osint', createIntelligenceRouter());
 
 app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
