@@ -537,6 +537,45 @@ $('#export-graph-svg').addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
+
+async function loadProviders() {
+  const list = $('#providers-list');
+  list.textContent = 'Chargement des fournisseurs…';
+  try {
+    const data = await apiRequest('/api/integrations');
+    list.innerHTML = data.providers.map(provider => `
+      <article class="provider-card" data-provider-card="${escapeHtml(provider.id)}">
+        <div class="provider-top"><div><b>${escapeHtml(provider.name)}</b><small>${escapeHtml(provider.capabilities.join(' · '))}</small></div>
+          <span class="provider-status ${provider.configured ? 'configured' : ''}">${provider.configured ? 'CLÉ DÉTECTÉE' : 'NON CONFIGURÉ'}</span>
+        </div>
+        <small class="provider-vars">${provider.configuration.map(item => `${escapeHtml(item.variable)} : ${item.configured ? 'présente' : 'absente'}`).join(' · ')}</small>
+        <div class="provider-actions">
+          ${provider.configured && provider.testable ? `<button type="button" data-test-provider="${escapeHtml(provider.id)}">Tester la connexion</button>` : provider.configured ? '<span class="loading">Test manuel requis</span>' : '<span class="loading">Ajoute la clé dans les variables Render</span>'}
+        </div>
+        <div class="provider-result" role="status"></div>
+      </article>`).join('');
+  } catch (error) { list.textContent = error.message; }
+}
+
+$('#providers-list').addEventListener('click', async event => {
+  const button = event.target.closest('[data-test-provider]');
+  if (!button) return;
+  const providerId = button.dataset.testProvider;
+  const card = button.closest('[data-provider-card]');
+  const output = card.querySelector('.provider-result');
+  button.disabled = true;
+  button.textContent = 'Test en cours…';
+  output.textContent = '';
+  try {
+    const result = await apiMutation(`/api/integrations/${encodeURIComponent(providerId)}/test`, 'POST', {});
+    output.textContent = `État : ${result.status} · HTTP ${result.httpStatus ?? '—'} · ${result.latencyMs ?? '—'} ms`;
+  } catch (error) { output.textContent = error.message; }
+  button.disabled = false;
+  button.textContent = 'Tester à nouveau';
+});
+
+$('#refresh-providers').addEventListener('click', loadProviders);
+
 document.querySelectorAll('.nav').forEach(button => {
   button.addEventListener('click', () => {
     document.querySelectorAll('.nav').forEach(item => item.classList.remove('active'));
@@ -551,8 +590,14 @@ document.querySelectorAll('.nav').forEach(button => {
       else setAuthMessage('Ouvre un dossier, puis utilise « Voir le graphe » pour afficher ses entités sourcées.');
       $('#cases-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else if (button.dataset.view === 'sources') {
-      setAuthMessage('Le centre de connecteurs API est encore en développement.');
-      $('#account-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if ($('#account-active').hidden) {
+        setAuthMessage('Connecte-toi pour consulter le centre API.');
+        $('#account-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        $('#integrations-panel').hidden = false;
+        loadProviders();
+        $('#integrations-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     } else {
       $('#account-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
