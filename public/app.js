@@ -273,6 +273,21 @@ $('#domain-intel-form').addEventListener('submit', event => {
   runIntelLookup('#domain-intel-input', '#domain-intel-result', value => `/api/osint/domain/${encodeURIComponent(value)}`);
 });
 
+$('#phone-intel-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const box = $('#phone-intel-result');
+  box.className = 'result';
+  box.textContent = 'Lecture des métadonnées de numérotation…';
+  try {
+    const data = await apiRequest('/api/osint/phone', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: $('#phone-intel-input').value.trim() })
+    });
+    box.innerHTML = `<pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  } catch (error) { box.textContent = error.message; }
+});
+
 $('#email-intel-form').addEventListener('submit', async event => {
   event.preventDefault();
   const box = $('#email-intel-result');
