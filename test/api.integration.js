@@ -5,7 +5,7 @@ import sharp from 'sharp';
 
 test('account sessions and private case workflows are isolated by owner', { skip: !process.env.DATABASE_URL, timeout: 90_000 }, async t => {
   process.env.NODE_ENV = 'test';
-  for (const key of ['VIRUSTOTAL_API_KEY', 'ABUSEIPDB_API_KEY', 'SHODAN_API_KEY', 'CENSYS_API_ID', 'CENSYS_API_SECRET', 'HIBP_API_KEY', 'OPENAI_API_KEY']) delete process.env[key];
+  for (const key of ['VIRUSTOTAL_API_KEY', 'ABUSEIPDB_API_KEY', 'SHODAN_API_KEY', 'CENSYS_API_ID', 'CENSYS_API_SECRET', 'HIBP_API_KEY', 'OPENAI_API_KEY', 'AUTOMATION_SECRET']) delete process.env[key];
   const { app } = await import('../src/server.js');
   const { pool } = await import('../src/db.js');
   const server = app.listen(0, '127.0.0.1');
@@ -45,6 +45,8 @@ test('account sessions and private case workflows are isolated by owner', { skip
   assert.ok(aiSchema.rows[0].messages);
   const imageSchema = await pool.query("SELECT to_regclass('public.image_records') AS images");
   assert.ok(imageSchema.rows[0].images);
+  const automationSchema = await pool.query("SELECT to_regclass('public.automation_runs') AS runs");
+  assert.ok(automationSchema.rows[0].runs);
 
   t.diagnostic('Registering first user');
   const reg1 = await request('/api/auth/register', {
@@ -56,6 +58,27 @@ test('account sessions and private case workflows are isolated by owner', { skip
   userId1 = reg1.data.user.id;
   const cookie1 = reg1.response.headers.get('set-cookie').split(';')[0];
   const csrf1 = reg1.data.csrfToken;
+
+  const automation = await request('/api/automations', {
+    method: 'POST', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ taskType: 'dns_change', domain: 'example.com', frequency: 'daily', authorized: true })
+  });
+  assert.equal(automation.response.status, 201);
+  const automationList = await request('/api/automations', { cookie: cookie1 });
+  assert.equal(automationList.response.status, 200);
+  assert.equal(automationList.data.tasks.length, 1);
+  const disabledAutomation = await request(`/api/automations/${automation.data.task.id}`, {
+    method: 'PATCH', cookie: cookie1, csrf: csrf1,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ enabled: false })
+  });
+  assert.equal(disabledAutomation.response.status, 200);
+  assert.equal(disabledAutomation.data.task.enabled, false);
+  const noAutomationSecret = await request('/api/automations/run-due', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({})
+  });
+  assert.equal(noAutomationSecret.response.status, 401);
 
   const aiConversation = await request('/api/ai/conversations', {
     method: 'POST', cookie: cookie1, csrf: csrf1,
