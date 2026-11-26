@@ -27,6 +27,7 @@ Ouvrir http://localhost:3000.
 - `GET|POST /api/automations`, `PATCH /api/automations/:id`, `POST /api/automations/:id/run`, `GET /api/automations/:id/runs` — surveillance passive.
 - `POST /api/automations/run-due` — worker planifié protégé par secret Bearer.
 - `GET /api/notifications`, `PATCH /api/notifications/:id/read` — boîte de notifications.
+- `GET /api/admin/overview`, `/api/admin/users`, `/api/admin/audit`, `PATCH /api/admin/users/:id/status`, `PATCH /api/admin/users/:id/roles` — administration (rôle admin requis).
 - `GET /api/ready` — readiness PostgreSQL.
 - `GET /api/modules` — catalogue honnête des modules.
 - `POST /api/osint/dns` — DNS passif A/AAAA/MX/NS/TXT.
@@ -93,6 +94,7 @@ Le Blueprint propose un service Node et une base PostgreSQL distincte en région
 - [x] Assistant IA Responses API avec historique privé et contexte dossier sur consentement explicite.
 - [x] Migrations 001–004 et rollback protégé.
 - [x] Automatisations passives DNS/CT, historique d'exécution et notifications ; planification GitHub Actions activable par secrets.
+- [x] Administration : allowlist d'administrateurs, gestion des rôles/comptes et journal d'audit.
 - [ ] Résultat CI final complet de la branche courante.
 - [ ] Exécution des migrations sur la base Render OSINT.
 - [ ] Déploiement et tests de production.
