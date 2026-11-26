@@ -38,6 +38,8 @@ Ouvrir http://localhost:3000.
 - `GET /api/reports/investigations/:id` — historique des rapports générés.
 - `POST /api/reports/investigations/:id` — génération PDF, HTML, JSON, CSV ou Markdown (CSRF requis).
 - `GET /api/ai/conversations`, `POST /api/ai/conversations`, `GET /api/ai/conversations/:id`, `POST /api/ai/conversations/:id/messages` — assistant IA et historique personnel.
+
+Le modèle IA utilise Responses API ; sans `OPENAI_API_KEY`, la génération renvoie explicitement « non configuré ». Les données d'un dossier ne sont transmises à OpenAI que si l'utilisateur coche l'option correspondante.
 - `POST /api/auth/register` — création de compte.
 - `POST /api/auth/login` — ouverture de session.
 - `GET /api/auth/me` — compte et rôles de la session.
@@ -96,6 +98,7 @@ Le workflow GitHub Actions vérifie la syntaxe JavaScript et exécute les tests 
 - [x] Threat Intelligence : routes IP/domaine/hash avec résultats explicitement non configurés si les clés manquent
 - [x] Report Generator : PDF, HTML, JSON, CSV et Markdown avec sources, notes, entités et relations
 - [x] AI OSINT Assistant : historique privé et Responses API, activé uniquement si OPENAI_API_KEY est configurée
+- [x] Migrations ordonnées et rollback explicite protégé contre la suppression de données
 - [x] Tests unitaires pour les identifiants et tokens
 - [ ] Exécution des migrations sur la base Render OSINT
 - [ ] Tests d'intégration avec PostgreSQL et vérification multi-utilisateur
