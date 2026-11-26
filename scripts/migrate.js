@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const { Pool } = pg;
 const here = path.dirname(fileURLToPath(import.meta.url));
 const migrationDir = path.join(here, '..', 'src', 'migrations');
-const migrations = ['001_initial_schema', '002_ai_conversations', '003_image_records'];
+const migrations = ['001_initial_schema', '002_ai_conversations', '003_image_records', '004_automation_runs'];
 
 if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL is required. No database has been changed.');
