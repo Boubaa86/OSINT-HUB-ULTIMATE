@@ -32,6 +32,32 @@ function setAuthMessage(message, isError = false) {
   node.classList.toggle('error-text', isError);
 }
 
+function applyPreferences(preferences) {
+  document.body.classList.toggle('theme-light', preferences.theme === 'light');
+  document.querySelector('.shell').classList.toggle('sidebar-collapsed', Boolean(preferences.sidebarCollapsed));
+  $('#theme-toggle').textContent = preferences.theme === 'light' ? 'Mode sombre' : 'Mode clair';
+  $('#sidebar-toggle').textContent = preferences.sidebarCollapsed ? 'Agrandir' : 'Réduire';
+}
+
+async function loadSettings() {
+  try {
+    const data = await apiRequest('/api/settings');
+    applyPreferences(data.preferences);
+  } catch {}
+}
+
+$('#theme-toggle').addEventListener('click', async () => {
+  const theme = document.body.classList.contains('theme-light') ? 'dark' : 'light';
+  applyPreferences({ theme, sidebarCollapsed: document.querySelector('.shell').classList.contains('sidebar-collapsed') });
+  try { await apiMutation('/api/settings', 'PATCH', { theme }); } catch (error) { setAuthMessage(error.message, true); }
+});
+
+$('#sidebar-toggle').addEventListener('click', async () => {
+  const sidebarCollapsed = !document.querySelector('.shell').classList.contains('sidebar-collapsed');
+  applyPreferences({ theme: document.body.classList.contains('theme-light') ? 'light' : 'dark', sidebarCollapsed });
+  try { await apiMutation('/api/settings', 'PATCH', { sidebarCollapsed }); } catch (error) { setAuthMessage(error.message, true); }
+});
+
 async function loadDashboard() {
   try {
     const data = await apiRequest('/api/dashboard/summary');
@@ -53,6 +79,7 @@ function showAccount(user) {
   $('#account-email').textContent = user.email || '';
   $('#admin-nav').hidden = !(Array.isArray(user.roles) && user.roles.includes('admin'));
   loadDashboard();
+  loadSettings();
 }
 
 function showSignedOut() {
