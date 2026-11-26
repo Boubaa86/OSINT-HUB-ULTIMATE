@@ -33,7 +33,8 @@ export async function requireAuth(req, res, next) {
     const token = readCookie(req, COOKIE_NAME);
     if (!token) return res.status(401).json({ error: 'Connexion requise.' });
     const result = await pool.query(
-      `SELECT s.id AS session_id, s.csrf_hash, u.id, u.email, u.display_name, u.status
+      `SELECT s.id AS session_id, s.csrf_hash, u.id, u.email, u.display_name, u.status,
+              COALESCE((SELECT array_agg(r.role_key) FROM user_roles ur JOIN roles r ON r.id = ur.role_id WHERE ur.user_id = u.id), ARRAY[]::text[]) AS roles
        FROM user_sessions s
        JOIN users u ON u.id = s.user_id
        WHERE s.token_hash = $1 AND s.expires_at > NOW()
@@ -41,7 +42,10 @@ export async function requireAuth(req, res, next) {
       [hashOpaqueToken(token)]
     );
     if (!result.rowCount) return res.status(401).json({ error: 'Session expirée ou invalide.' });
-    req.user = { id: result.rows[0].id, email: result.rows[0].email, displayName: result.rows[0].display_name };
+    const roles = result.rows[0].roles || [];
+    const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(value => value.trim().toLowerCase()).filter(Boolean);
+    if (adminEmails.includes(result.rows[0].email.toLowerCase()) && !roles.includes('admin')) roles.push('admin');
+    req.user = { id: result.rows[0].id, email: result.rows[0].email, displayName: result.rows[0].display_name, roles };
     req.session = { id: result.rows[0].session_id, csrfHash: result.rows[0].csrf_hash };
     next();
   } catch (error) {
@@ -181,4 +185,14 @@ export function createAuthRouter() {
   });
 
   return router;
+}
+
+export function requireRole(role) {
+  return (req, res, next) => {
+    if (!req.user) return res.status(401).json({ error: 'Connexion requise.' });
+    if (!Array.isArray(req.user.roles) || !req.user.roles.includes(role)) {
+      return res.status(403).json({ error: 'Permission insuffisante.' });
+    }
+    next();
+  };
 }
