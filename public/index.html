@@ -18,6 +18,7 @@
     <button class="nav" data-view="sources">◎ <span>Sources & connecteurs</span></button>
     <button class="nav" data-view="threat">⚠ <span>Threat Intelligence</span></button>
     <button class="nav" data-view="ai">✧ <span>Assistant IA</span></button>
+    <button class="nav" data-view="image">▧ <span>Image Intelligence</span></button>
     <div class="side-bottom"><div class="status-dot"></div><span>Serveur actif</span><small id="health">Vérification…</small></div>
   </aside>
   <main class="main">
@@ -165,6 +166,18 @@
         <button type="submit">Envoyer à l'assistant</button>
         <small id="ai-status" role="status">Nécessite OPENAI_API_KEY configurée sur Render.</small>
       </form>
+    </section>
+    <section class="panel image-panel" id="image-panel" hidden>
+      <div class="panel-head"><div><div class="eyebrow">IMAGE INTELLIGENCE</div><h3>Métadonnées, empreintes et doublons</h3></div><span class="tag">ANALYSE LOCALE</span></div>
+      <p>JPEG, PNG, WebP ou TIFF · 8 Mo maximum · GPS et numéros de série exclus · aucune reconnaissance faciale ni OCR.</p>
+      <form id="image-form" class="image-form">
+        <label for="image-file">CHOISIR UNE IMAGE</label>
+        <input id="image-file" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/tiff" required>
+        <label for="image-case-select">DOSSIER ASSOCIÉ (FACULTATIF)</label>
+        <select id="image-case-select"><option value="">Aucun dossier</option></select>
+        <button type="submit">Analyser l'image</button>
+      </form>
+      <div id="image-output" class="result empty">Les fichiers ne sont pas conservés ; seules les empreintes et métadonnées autorisées sont enregistrées.</div>
     </section>
     <footer><span>OSINT HUB ULTIMATE <b>·</b> BUILD 0.1.0</span><span>Usage légal uniquement · Respect de la vie privée</span></footer>
   </main>
