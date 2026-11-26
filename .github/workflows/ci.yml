@@ -56,6 +56,7 @@ jobs:
           node --check src/routes/threat.js
           node --check src/routes/reports.js
           node --check src/routes/ai.js
+          node --check src/routes/images.js
           node --check src/reports/generator.js
           node --check src/providers/certificate-transparency.js
           node --check src/providers/rdap.js
