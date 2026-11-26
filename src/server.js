@@ -66,7 +66,9 @@ app.get('/api/modules', (_req, res) => {
     { id: 'email', name: 'Analyse e-mail', status: 'planned', scope: 'Syntaxe, domaine et API autorisées' },
     { id: 'username', name: 'Pseudonymes publics', status: 'planned', scope: 'Profils publics via sources autorisées' },
     { id: 'image', name: 'Analyse d’images', status: 'planned', scope: 'Métadonnées, dimensions et SHA-256' },
-    { id: 'graph', name: 'Graphe de relations', status: 'planned', scope: 'Relations sourcées et niveaux de confiance' }
+    { id: 'graph', name: 'Graphe de relations', status: 'planned', scope: 'Relations sourcées et niveaux de confiance' },
+    { id: 'auth', name: 'Comptes & sessions', status: 'available', scope: 'Inscription, connexion, sessions sécurisées' },
+    { id: 'case-management', name: 'Gestion des dossiers', status: 'available', scope: 'Dossiers privés, notes et sources' }
   ] });
 });
 
