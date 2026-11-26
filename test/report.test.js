@@ -21,6 +21,8 @@ test('renders escaped HTML and structured Markdown, JSON and CSV reports', () =>
   assert.match(renderReport('markdown', sample), /## Sources/);
   assert.match(renderReport('json', sample), /"investigation"/);
   assert.match(renderReport('csv', sample), /"relationship"/);
+  const unsafe = { ...sample, sources: [{ ...sample.sources[0], source_name: '=2+2' }] };
+  assert.match(renderReport('csv', unsafe), /"'=2\+2"/);
 });
 
 test('renders a valid PDF stream', async () => {
