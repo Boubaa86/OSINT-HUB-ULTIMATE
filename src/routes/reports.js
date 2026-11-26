@@ -15,7 +15,7 @@ async function loadReportData(investigationId, userId) {
   const [sources, notes, entities, relationships] = await Promise.all([
     pool.query('SELECT source_name, source_url, source_type, collected_at, reliability, notes FROM investigation_sources WHERE investigation_id = $1 ORDER BY collected_at ASC LIMIT 1000', [investigationId]),
     pool.query('SELECT body, created_at FROM investigation_notes WHERE investigation_id = $1 ORDER BY created_at ASC LIMIT 1000', [investigationId]),
-    pool.query('SELECT id, entity_type, canonical_value, display_label, attributes, created_at FROM intelligence_entities WHERE investigation_id = $1 ORDER BY created_at ASC', [investigationId]),
+    pool.query('SELECT id, entity_type, canonical_value, display_label, attributes, created_at FROM intelligence_entities WHERE investigation_id = $1 ORDER BY created_at ASC LIMIT 1000', [investigationId]),
     pool.query(
       `SELECT r.from_entity_id, r.to_entity_id, r.relation_type, r.confidence, r.rationale, r.created_at,
               a.display_label AS from_label, b.display_label AS to_label, s.source_name
@@ -23,7 +23,7 @@ async function loadReportData(investigationId, userId) {
        JOIN intelligence_entities a ON a.id = r.from_entity_id
        JOIN intelligence_entities b ON b.id = r.to_entity_id
        LEFT JOIN investigation_sources s ON s.id = r.source_id
-       WHERE r.investigation_id = $1 ORDER BY r.created_at ASC`,
+       WHERE r.investigation_id = $1 ORDER BY r.created_at ASC LIMIT 1000`,
       [investigationId]
     )
   ]);
