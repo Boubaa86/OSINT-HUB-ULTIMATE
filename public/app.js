@@ -10,8 +10,14 @@ function escapeHtml(value) {
   }[character]));
 }
 
+const API_BASE = String(window.OSINT_CONFIG?.apiBase || '').replace(/\\/+$/, '');
+function apiUrl(url) {
+  if (!API_BASE) return url;
+  return new URL(url, API_BASE).toString();
+}
+
 async function apiRequest(url, options = {}) {
-  const response = await fetch(url, { credentials: 'same-origin', ...options });
+  const response = await fetch(apiUrl(url), { credentials: 'include', ...options });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || `Erreur HTTP ${response.status}`);
   return data;
@@ -798,9 +804,9 @@ $('#image-form').addEventListener('submit', async event => {
     const formData = new FormData();
     formData.append('image', file, file.name);
     if ($('#image-case-select').value) formData.append('investigationId', $('#image-case-select').value);
-    const response = await fetch('/api/osint/image', {
+    const response = await fetch(apiUrl('/api/osint/image'), {
       method: 'POST',
-      credentials: 'same-origin',
+      credentials: 'include',
       headers: { 'X-CSRF-Token': csrfToken },
       body: formData
     });
