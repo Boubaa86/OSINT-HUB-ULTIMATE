@@ -27,8 +27,12 @@ test('account sessions and private case workflows are isolated by owner', { skip
   }
 
   t.after(async () => {
-    if (userId1 || userId2) {
-      await pool.query('DELETE FROM users WHERE id = ANY($1::uuid[])', [[userId1, userId2].filter(Boolean)]);
+    const testUserIds = [userId1, userId2].filter(Boolean);
+    if (testUserIds.length) {
+      // Keep production FK rules strict; explicitly remove test-owned authorship rows first.
+      await pool.query('DELETE FROM investigation_notes WHERE author_id = ANY($1::uuid[])', [testUserIds]);
+      await pool.query('DELETE FROM reports WHERE created_by = ANY($1::uuid[])', [testUserIds]);
+      await pool.query('DELETE FROM users WHERE id = ANY($1::uuid[])', [testUserIds]);
     }
     server.closeAllConnections?.();
     await new Promise(resolve => server.close(resolve));
@@ -201,13 +205,13 @@ test('account sessions and private case workflows are isolated by owner', { skip
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ entityType: 'domain', canonicalValue: 'example.com', displayLabel: 'example.com' })
   });
-  assert.equal(domainEntity.response.status, 201);
+  assert.equal(domainEntity.response.status, 201, JSON.stringify(domainEntity.data));
   const technologyEntity = await request(`/api/investigations/${caseId}/entities`, {
     method: 'POST', cookie: cookie1, csrf: csrf1,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ entityType: 'technology', canonicalValue: 'nginx', displayLabel: 'nginx' })
   });
-  assert.equal(technologyEntity.response.status, 201);
+  assert.equal(technologyEntity.response.status, 201, JSON.stringify(technologyEntity.data));
   const relationship = await request(`/api/investigations/${caseId}/relationships`, {
     method: 'POST', cookie: cookie1, csrf: csrf1,
     headers: { 'Content-Type': 'application/json' },
