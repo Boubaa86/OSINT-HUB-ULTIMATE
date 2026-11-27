@@ -58,6 +58,18 @@ test('account sessions and private case workflows are isolated by owner', { skip
   userId1 = reg1.data.user.id;
   const cookie1 = reg1.response.headers.get('set-cookie').split(';')[0];
   const csrf1 = reg1.data.csrfToken;
+  assert.equal(typeof reg1.data.sessionToken, 'string');
+  assert.ok(reg1.data.sessionToken.length >= 40);
+  const bearerMe = await request('/api/auth/me', {
+    headers: { Authorization: `Bearer ${reg1.data.sessionToken}` }
+  });
+  assert.equal(bearerMe.response.status, 200);
+  assert.equal(bearerMe.data.user.id, userId1);
+
+  const bearerSettings = await request('/api/settings', {
+    headers: { Authorization: `Bearer ${reg1.data.sessionToken}` }
+  });
+  assert.equal(bearerSettings.response.status, 200);
 
   const defaultSettings = await request('/api/settings', { cookie: cookie1 });
   assert.equal(defaultSettings.response.status, 200);
