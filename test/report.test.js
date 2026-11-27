@@ -20,7 +20,10 @@ test('renders escaped HTML and structured Markdown, JSON and CSV reports', () =>
   assert.doesNotMatch(html, /<script>alert/);
   assert.match(renderReport('markdown', sample), /## Sources/);
   assert.match(renderReport('json', sample), /"investigation"/);
-  assert.match(renderReport('csv', sample), /"relationship"/);
+  const csv = renderReport('csv', sample);
+  assert.match(csv, /"record_type"/);
+  assert.match(csv, /"relationship"/);
+  assert.doesNotMatch(csv, /"'relationship"/);
   const unsafe = { ...sample, sources: [{ ...sample.sources[0], source_name: '=2+2' }] };
   assert.match(renderReport('csv', unsafe), /"'=2\+2"/);
 });
