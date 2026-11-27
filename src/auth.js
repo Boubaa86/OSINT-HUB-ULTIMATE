@@ -26,15 +26,6 @@ function readSessionToken(req) {
   return readCookie(req, COOKIE_NAME);
 }
 
-function readSessionToken(req) {
-  const authorization = req.get('authorization');
-  if (authorization) {
-    const match = /^Bearer ([A-Za-z0-9_-]{40,100})$/i.exec(authorization.trim());
-    return match ? match[1] : null;
-  }
-  return readCookie(req, COOKIE_NAME);
-}
-
 function setSessionCookie(res, token) {
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
