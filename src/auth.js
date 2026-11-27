@@ -17,6 +17,15 @@ function readCookie(req, name) {
   return null;
 }
 
+function readSessionToken(req) {
+  const authorization = req.get('authorization');
+  if (authorization) {
+    const match = /^Bearer ([A-Za-z0-9_-]{40,100})$/i.exec(authorization.trim());
+    return match ? match[1] : null;
+  }
+  return readCookie(req, COOKIE_NAME);
+}
+
 function setSessionCookie(res, token) {
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
@@ -30,7 +39,7 @@ function setSessionCookie(res, token) {
 export async function requireAuth(req, res, next) {
   try {
     if (!pool) return res.status(503).json({ error: 'La base OSINT n’est pas configurée.' });
-    const token = readCookie(req, COOKIE_NAME);
+    const token = readSessionToken(req);
     if (!token) return res.status(401).json({ error: 'Connexion requise.' });
     const result = await pool.query(
       `SELECT s.id AS session_id, s.csrf_hash, u.id, u.email, u.display_name, u.status,
@@ -91,7 +100,7 @@ async function issueSession(client, userId, res) {
     [userId, hashOpaqueToken(token), hashOpaqueToken(csrfToken), expiresAt]
   );
   setSessionCookie(res, token);
-  return csrfToken;
+  return { csrfToken, sessionToken: token };
 }
 
 export function createAuthRouter() {
@@ -122,9 +131,9 @@ export function createAuthRouter() {
          ON CONFLICT DO NOTHING`,
         [user.id]
       );
-      const csrfToken = await issueSession(client, user.id, res);
+      const session = await issueSession(client, user.id, res);
       await client.query('COMMIT');
-      res.status(201).json({ user: { ...user, roles }, csrfToken });
+      res.status(201).json({ user: { ...user, roles }, ...session });
     } catch (error) {
       await client.query('ROLLBACK');
       if (error.code === '23505') return res.status(409).json({ error: 'Cette adresse e-mail est déjà utilisée.' });
@@ -154,8 +163,8 @@ export function createAuthRouter() {
       if (adminEmails.includes(user.email.toLowerCase()) && !roles.includes('admin')) roles.push('admin');
       const client = await pool.connect();
       try {
-        const csrfToken = await issueSession(client, user.id, res);
-        res.json({ user: { id: user.id, email: user.email, display_name: user.display_name, roles }, csrfToken });
+        const session = await issueSession(client, user.id, res);
+        res.json({ user: { id: user.id, email: user.email, display_name: user.display_name, roles }, ...session });
       } finally {
         client.release();
       }
