@@ -87,8 +87,8 @@ const validDomain = value =>
 app.get('/api/health', (_req, res) => {
   res.json({
     ok: true,
-    service: 'osint-hub-ultimate',
-    version: '0.1.0',
+    service: 'osint-hub-infinity',
+    version: '0.2.0',
     timestamp: new Date().toISOString()
   });
 });
