@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#07111f">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://osint-hub-api.onrender.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
   <title>OSINT HUB INFINITY</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
@@ -31,11 +33,11 @@
       <div id="search-history-list" class="search-history-list" hidden></div>
     </section>
     <section class="welcome"><div><div class="eyebrow cyan">WORKSPACE / FRANCE</div><h2>Bienvenue dans votre centre<br><em>de renseignement numérique.</em></h2><p>Recherchez, recoupez et documentez des informations issues de sources ouvertes.</p></div><div class="radar"><div class="radar-ring r1"></div><div class="radar-ring r2"></div><div class="radar-ring r3"></div><div class="radar-sweep"></div><span class="radar-center"></span></div></section>
-    <section class="stats">
-      <article><small>MODULES DISPONIBLES</small><strong id="module-count">—</strong><span>Connecteurs actifs en V1</span></article>
-      <article><small>INVESTIGATIONS</small><strong id="investigation-count">0</strong><span>Dossiers enregistrés — stockage à venir</span></article>
-      <article><small>SOURCES API</small><strong>0</strong><span>Clés à configurer</span></article>
-      <article><small>ÉTAT DU SYSTÈME</small><strong class="good">API DE BASE</strong><span>État vérifié via le serveur</span></article>
+    <section class="stats" aria-label="État du workspace">
+      <article><small>MODULES DISPONIBLES</small><strong id="module-count">—</strong><span>Fonctions actuellement utilisables</span></article>
+      <article><small>INVESTIGATIONS</small><strong id="investigation-count">—</strong><span>Dossiers de ton compte</span></article>
+      <article><small>ENTITÉS INTELBASE</small><strong id="entity-count">—</strong><span id="entity-report-summary">Sources, rapports et veilles — chargement</span></article>
+      <article><small>ÉTAT DU SYSTÈME</small><strong id="system-state" class="planned">VÉRIFICATION…</strong><span id="system-state-detail">API et PostgreSQL en cours de vérification</span></article>
     </section>
     <section class="work-grid">
       <div class="panel search-panel">
