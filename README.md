@@ -1,4 +1,4 @@
-# OSINT HUB ULTIMATE
+# OSINT HUB INFINITY
 
 Plateforme OSINT en développement progressif. Les modules annoncés comme disponibles correspondent à des routes réellement implémentées ; les autres restent explicitement marqués « à venir ».
 
@@ -77,7 +77,7 @@ La CI installe PostgreSQL temporaire, applique les migrations, vérifie la synta
 
 ## Déploiement Render
 
-Le Blueprint propose un service Node et une base PostgreSQL distincte en région Frankfurt. Le Blueprint existe, mais aucune ressource OSINT n'a encore été provisionnée. Vérifie la durée de conservation de l'offre PostgreSQL gratuite avant validation. Les clés API restent dans les variables d'environnement Render.
+Le Static Site `osint-hub-ultimate` est publié sur https://osint-hub-ultimate.onrender.com et le service API `osint-hub-api` est publié sur https://osint-hub-api.onrender.com (région Frankfurt, plan Free). Le backend démarre sans base, mais les fonctions personnelles nécessitent une base PostgreSQL OSINT séparée. Cette base n'est pas encore créée : ne jamais utiliser `warworld-game-db`. Vérifie les conditions et l'expiration du plan PostgreSQL avant de le provisionner. Les clés API restent dans les variables d'environnement Render.
 
 ## État actuel
 
@@ -98,8 +98,8 @@ Le Blueprint propose un service Node et une base PostgreSQL distincte en région
 - [x] Administration : allowlist d'administrateurs, gestion des rôles/comptes et journal d'audit.
 - [x] Préférences persistantes : thème clair/sombre et barre latérale rétractable.
 - [ ] Résultat CI final complet de la branche courante.
-- [ ] Exécution des migrations sur la base Render OSINT.
-- [ ] Déploiement et tests de production.
+- [ ] Création d'une base PostgreSQL OSINT distincte et exécution des migrations.
+- [ ] Test HTTP indépendant de `/api/health`, CORS cross-origin, authentification et parcours utilisateur après provisionnement de la base.
 - [ ] Tests AppMint sur Android.
 - [ ] OCR, recherche de pseudonymes par sources autorisées, filtres/chronologie avancés, flux CERT, automatisations et administration.
 
