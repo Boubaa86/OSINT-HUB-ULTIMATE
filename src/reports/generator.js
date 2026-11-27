@@ -3,7 +3,7 @@ import PDFDocument from 'pdfkit';
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const csvCell = value => {
   const text = String(value ?? '');
-  const safe = /^[=+@\\-\\t\\r]/.test(text) ? `'${text}` : text;
+  const safe = /^[=+@\-\t\r]/.test(text) ? `'${text}` : text;
   return `"${safe.replace(/"/g, '""')}"`;
 };
 
