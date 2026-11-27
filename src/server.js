@@ -27,6 +27,26 @@ const PORT = Number(process.env.PORT || 3000);
 
 app.disable('x-powered-by');
 app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : false);
+
+// CORS strict : le site statique est autorisé à appeler cette API avec sa session.
+const allowedOrigins = new Set(
+  (process.env.APP_ORIGIN || '').split(',').map(value => value.trim()).filter(Boolean)
+);
+app.use('/api', (req, res, next) => {
+  const origin = req.get('origin');
+  if (!origin) return next();
+  if (!allowedOrigins.has(origin)) {
+    return res.status(403).json({ error: 'Origine non autorisée.' });
+  }
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-CSRF-Token');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
