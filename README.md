@@ -4,7 +4,7 @@ Plateforme OSINT en développement progressif. Les modules annoncés comme dispo
 
 ## Exigences
 
-- Node.js 20+
+- Node.js 22
 - PostgreSQL 14+
 - npm
 
@@ -48,7 +48,7 @@ Ouvrir http://localhost:3000.
 - `GET|POST /api/investigations/:id/notes` et `GET|POST /api/investigations/:id/sources` — notes et sources.
 - `GET /api/investigations/:id/graph`, `POST /api/investigations/:id/entities`, `POST /api/investigations/:id/relationships` — données IntelBase sourcées.
 
-Les mutations nécessitent le cookie de session et l'en-tête `x-csrf-token`. Les dossiers sont cloisonnés par propriétaire et ne disposent pas de route de suppression définitive : ils peuvent être archivés.
+Les mutations nécessitent un jeton CSRF. Les clients same-origin utilisent le cookie HttpOnly ; le Static Site Render utilise un jeton Bearer de session conservé dans `sessionStorage` et envoyé en HTTPS. Le backend n'accepte que l'origine configurée dans `APP_ORIGIN`. Les dossiers sont cloisonnés par propriétaire et ne disposent pas de route de suppression définitive : ils peuvent être archivés.
 
 ## AI Assistant
 
@@ -73,11 +73,11 @@ npm test
 npm run test:integration # nécessite PostgreSQL
 ```
 
-La CI installe PostgreSQL temporaire, applique les migrations, vérifie la syntaxe et exécute les tests unitaires et d'intégration.
+La dernière CI entièrement réussie (commit `c0b19fde`) a appliqué les 4 migrations, passé 10 tests unitaires et 1 test d'intégration PostgreSQL, et affiché 0 vulnérabilité dans `npm audit`. Le test CORS ajouté ensuite et la version de package 0.2.0 restent à confirmer par une nouvelle CI complète.
 
 ## Déploiement Render
 
-Le Static Site `osint-hub-ultimate` est publié sur https://osint-hub-ultimate.onrender.com et le service API `osint-hub-api` est publié sur https://osint-hub-api.onrender.com (région Frankfurt, plan Free). Le backend démarre sans base, mais les fonctions personnelles nécessitent une base PostgreSQL OSINT séparée. Cette base n'est pas encore créée : ne jamais utiliser `warworld-game-db`. Vérifie les conditions et l'expiration du plan PostgreSQL avant de le provisionner. Les clés API restent dans les variables d'environnement Render.
+OSINT HUB INFINITY **0.2.0** est publié en deux parties : le Static Site `osint-hub-ultimate` sur https://osint-hub-ultimate.onrender.com et l'API Node `osint-hub-api` sur https://osint-hub-api.onrender.com (région Frankfurt, plan Free). Les deux services ont un déploiement Render `live` sur le commit `69ff7184`. Le backend démarre sans base, mais les fonctions personnelles nécessitent une base PostgreSQL OSINT séparée. Cette base n'est pas encore créée : ne jamais utiliser `warworld-game-db`. L'espace Render contient déjà la base Free Warworld, donc ne crée pas une deuxième base ni une offre payante sans accord explicite d'un parent/tuteur et vérification du prix. Les clés API restent dans les variables d'environnement Render.
 
 ## État actuel
 
