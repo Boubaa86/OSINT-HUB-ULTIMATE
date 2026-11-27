@@ -5,6 +5,7 @@ import sharp from 'sharp';
 
 test('account sessions and private case workflows are isolated by owner', { skip: !process.env.DATABASE_URL, timeout: 90_000 }, async t => {
   process.env.NODE_ENV = 'test';
+  process.env.APP_ORIGIN = 'https://osint-hub-ultimate.onrender.com';
   for (const key of ['VIRUSTOTAL_API_KEY', 'ABUSEIPDB_API_KEY', 'SHODAN_API_KEY', 'CENSYS_API_ID', 'CENSYS_API_SECRET', 'HIBP_API_KEY', 'OPENAI_API_KEY', 'AUTOMATION_SECRET', 'ADMIN_EMAILS']) delete process.env[key];
   const { app } = await import('../src/server.js');
   const { pool } = await import('../src/db.js');
@@ -39,9 +40,29 @@ test('account sessions and private case workflows are isolated by owner', { skip
     await pool.end();
   });
 
-  t.diagnostic('Checking health and database readiness');
+  t.diagnostic('Checking CORS, health and database readiness');
+  const allowedOrigin = process.env.APP_ORIGIN;
+  const preflight = await fetch(base + '/api/auth/login', {
+    method: 'OPTIONS',
+    headers: {
+      Origin: allowedOrigin,
+      'Access-Control-Request-Method': 'POST',
+      'Access-Control-Request-Headers': 'authorization,content-type,x-csrf-token'
+    }
+  });
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get('access-control-allow-origin'), allowedOrigin);
+  assert.match(preflight.headers.get('access-control-allow-headers') || '', /authorization/i);
+  const rejectedOrigin = await fetch(base + '/api/auth/login', {
+    method: 'OPTIONS',
+    headers: { Origin: 'https://untrusted.example', 'Access-Control-Request-Method': 'POST' }
+  });
+  assert.equal(rejectedOrigin.status, 403);
+
   const health = await request('/api/health');
   assert.equal(health.response.status, 200);
+  assert.equal(health.data.service, 'osint-hub-infinity');
+  assert.equal(health.data.version, '0.2.0');
   const ready = await request('/api/ready');
   assert.equal(ready.response.status, 200);
   const aiSchema = await pool.query("SELECT to_regclass('public.ai_conversations') AS conversations, to_regclass('public.ai_messages') AS messages");
