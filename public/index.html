@@ -4,26 +4,36 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#07111f">
-  <title>OSINT HUB ULTIMATE</title>
+  <title>OSINT HUB INFINITY</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 <div class="shell">
   <aside class="sidebar">
-    <div class="brand"><span class="mark">OH</span><div><b>OSINT HUB</b><small>ULTIMATE / V1</small></div></div>
+    <div class="brand"><span class="mark">OH</span><div><b>OSINT HUB</b><small>INFINITY / BETA</small></div></div>
     <div class="nav-label">ESPACE DE TRAVAIL</div>
     <button class="nav active" data-view="overview">◈ <span>Vue d'ensemble</span></button>
     <button class="nav" data-view="investigations">▣ <span>Investigations</span></button>
     <button class="nav" data-view="graph">⌘ <span>Graphe Intel</span></button>
     <button class="nav" data-view="sources">◎ <span>Sources & connecteurs</span></button>
+    <button class="nav" data-view="threat">⚠ <span>Threat Intelligence</span></button>
+    <button class="nav" data-view="ai">✧ <span>Assistant IA</span></button>
+    <button class="nav" data-view="image">▧ <span>Image Intelligence</span></button>
+    <button class="nav" data-view="automation">⟳ <span>Automation</span></button>
+    <button class="nav" id="admin-nav" data-view="admin" hidden>⚙ <span>Administration</span></button>
     <div class="side-bottom"><div class="status-dot"></div><span>Serveur actif</span><small id="health">Vérification…</small></div>
   </aside>
   <main class="main">
-    <header><div><div class="eyebrow">CENTRE D'INVESTIGATION NUMÉRIQUE</div><h1 id="page-title">Vue d'ensemble</h1></div><div class="header-right"><span class="pill"><i></i> MODE SOURCES OUVERTES</span><div class="avatar">OH</div></div></header>
+    <header><div><div class="eyebrow">CENTRE D'INVESTIGATION NUMÉRIQUE</div><h1 id="page-title">Vue d'ensemble</h1></div><form id="global-search-form" class="global-search"><input id="global-search-input" maxlength="2048" placeholder="Domaine, IP, e-mail, téléphone, hash…" required><label><input id="save-search-history" type="checkbox"> Historique</label><button type="submit">Rechercher</button></form><div class="header-right"><button id="theme-toggle" class="secondary-button" type="button">Mode clair</button><button id="sidebar-toggle" class="secondary-button" type="button">Réduire</button><span class="pill"><i></i> MODE SOURCES OUVERTES</span><div class="avatar">OH</div></div></header>
+    <section id="global-search-results" class="panel global-search-results" hidden>
+      <div class="panel-head"><h3>Résultats de recherche universelle</h3><button id="load-search-history" class="secondary-button" type="button">Historique</button></div>
+      <div id="global-search-output" class="result empty">Lance une recherche pour voir les sources compatibles.</div>
+      <div id="search-history-list" class="search-history-list" hidden></div>
+    </section>
     <section class="welcome"><div><div class="eyebrow cyan">WORKSPACE / FRANCE</div><h2>Bienvenue dans votre centre<br><em>de renseignement numérique.</em></h2><p>Recherchez, recoupez et documentez des informations issues de sources ouvertes.</p></div><div class="radar"><div class="radar-ring r1"></div><div class="radar-ring r2"></div><div class="radar-ring r3"></div><div class="radar-sweep"></div><span class="radar-center"></span></div></section>
     <section class="stats">
       <article><small>MODULES DISPONIBLES</small><strong id="module-count">—</strong><span>Connecteurs actifs en V1</span></article>
-      <article><small>INVESTIGATIONS</small><strong>0</strong><span>Dossiers enregistrés — stockage à venir</span></article>
+      <article><small>INVESTIGATIONS</small><strong id="investigation-count">0</strong><span>Dossiers enregistrés — stockage à venir</span></article>
       <article><small>SOURCES API</small><strong>0</strong><span>Clés à configurer</span></article>
       <article><small>ÉTAT DU SYSTÈME</small><strong class="good">API DE BASE</strong><span>État vérifié via le serveur</span></article>
     </section>
@@ -33,12 +43,171 @@
         <p>Consultez les enregistrements DNS publics d'un domaine : A, AAAA, MX, NS et TXT.</p>
         <form id="dns-form"><label for="domain">NOM DE DOMAINE</label><div class="search-row"><input id="domain" name="domain" placeholder="exemple.com" autocomplete="off" required><button>Analyser <b>→</b></button></div></form>
         <div id="dns-result" class="result empty">Les résultats vérifiables apparaîtront ici, avec leur source et leur date.</div>
+        <div class="intel-tools">
+          <form id="domain-intel-form">
+            <label for="domain-intel-input">ANALYSE DE DOMAINE (DNS + CERTIFICATS PUBLICS)</label>
+            <div class="search-row"><input id="domain-intel-input" placeholder="exemple.com" required><button type="submit">Analyser</button></div>
+          </form>
+          <div id="domain-intel-result" class="result empty">Connexion requise pour l'analyse approfondie.</div>
+          <form id="ip-intel-form">
+            <label for="ip-intel-input">ANALYSE D'IP PUBLIQUE (RDAP + REVERSE DNS)</label>
+            <div class="search-row"><input id="ip-intel-input" placeholder="8.8.8.8" required><button type="submit">Analyser</button></div>
+          </form>
+          <div id="ip-intel-result" class="result empty">Les IP privées et réservées sont refusées.</div>
+          <form id="email-intel-form">
+            <label for="email-intel-input">VÉRIFICATION E-MAIL (SYNTAXE + MX, SANS TEST DE BOÎTE)</label>
+            <div class="search-row"><input id="email-intel-input" type="email" placeholder="contact@exemple.com" required><button type="submit">Vérifier</button></div>
+          </form>
+          <div id="email-intel-result" class="result empty">La boîte e-mail et son propriétaire ne sont pas vérifiés.</div>
+          <form id="phone-intel-form">
+            <label for="phone-intel-input">FORMATAGE TÉLÉPHONE INTERNATIONAL (SANS LOCALISATION)</label>
+            <div class="search-row"><input id="phone-intel-input" placeholder="+33 6 12 34 56 78" required><button type="submit">Analyser</button></div>
+          </form>
+          <div id="phone-intel-result" class="result empty">Aucune recherche de propriétaire ou de position n'est effectuée.</div>
+        </div>
       </div>
       <div class="panel modules-panel"><div class="panel-head"><div><div class="eyebrow">ÉTAT DES MODULES</div><h3>Modules OSINT</h3></div><span class="tag">V1</span></div><div id="modules" class="module-list"><div class="loading">Chargement des modules…</div></div></div>
     </section>
-    <footer><span>OSINT HUB ULTIMATE <b>·</b> BUILD 0.1.0</span><span>Usage légal uniquement · Respect de la vie privée</span></footer>
+
+    <section class="panel account-panel" id="account-panel">
+      <div class="panel-head"><div><div class="eyebrow">ESPACE PERSONNEL</div><h3>Compte et accès sécurisé</h3></div><span class="tag">SESSION</span></div>
+      <p id="auth-message" role="status">Connecte-toi ou crée ton compte pour sauvegarder tes dossiers.</p>
+      <div id="auth-forms" class="auth-grid">
+        <form id="login-form" class="auth-form">
+          <h4>Connexion</h4>
+          <label for="login-email">E-MAIL</label><input id="login-email" type="email" autocomplete="username" required>
+          <label for="login-password">MOT DE PASSE</label><input id="login-password" type="password" autocomplete="current-password" required>
+          <button type="submit">Se connecter</button>
+        </form>
+        <form id="register-form" class="auth-form">
+          <h4>Créer un compte</h4>
+          <label for="register-name">NOM AFFICHÉ</label><input id="register-name" maxlength="60" required>
+          <label for="register-email">E-MAIL</label><input id="register-email" type="email" autocomplete="email" required>
+          <label for="register-password">MOT DE PASSE (12 CARACTÈRES MIN.)</label><input id="register-password" type="password" minlength="12" maxlength="128" autocomplete="new-password" required>
+          <button type="submit">Créer mon compte</button>
+        </form>
+      </div>
+      <div id="account-active" class="account-active" hidden>
+        <div><strong id="account-name"></strong><small id="account-email"></small></div>
+        <button id="logout-button" class="secondary-button" type="button">Déconnexion</button>
+      </div>
+    </section>
+
+    <section class="panel cases-panel" id="cases-panel" hidden>
+      <div class="panel-head"><div><div class="eyebrow">CASE MANAGEMENT</div><h3>Mes dossiers d'investigation</h3></div><button id="refresh-cases" class="secondary-button" type="button">Actualiser</button></div>
+      <form id="case-form" class="case-form">
+        <h4>Nouveau dossier</h4>
+        <label for="case-title">TITRE</label><input id="case-title" maxlength="140" required placeholder="Ex. Audit du domaine de mon association">
+        <label for="case-objective">OBJECTIF</label><input id="case-objective" maxlength="3000" placeholder="Que veux-tu vérifier ?">
+        <label for="case-description">DESCRIPTION</label><textarea id="case-description" rows="2" maxlength="5000" placeholder="Contexte et périmètre autorisé"></textarea>
+        <button type="submit">Créer le dossier</button>
+      </form>
+      <div id="cases-list" class="cases-list"><p class="loading">Chargement des dossiers…</p></div>
+      <div id="case-detail" class="case-detail" hidden>
+        <div class="panel-head"><h4 id="detail-title">Dossier</h4><div class="case-actions"><button id="show-graph" class="secondary-button" type="button">Voir le graphe</button><button id="close-case-detail" class="secondary-button" type="button">Fermer</button></div></div>
+        <div id="graph-view" class="graph-view" hidden>
+          <div class="graph-toolbar"><span id="graph-message">Graphe IntelBase</span><div><button id="export-graph-svg" class="secondary-button" type="button">SVG</button><button id="export-graph-png" class="secondary-button" type="button">PNG</button><button id="export-graph-json" class="secondary-button" type="button">JSON</button><button id="export-graph-csv" class="secondary-button" type="button">CSV</button></div></div>
+          <svg id="graph-svg" viewBox="0 0 900 560" role="img" aria-label="Graphe des entités et relations du dossier"></svg>
+          <small class="graph-help">Glisse pour déplacer le graphe, tire un nœud pour le déplacer et utilise la molette pour zoomer.</small>
+          <div class="graph-edit-grid">
+            <form id="entity-form" class="graph-form">
+              <h4>Ajouter une entité</h4>
+              <label for="entity-type">TYPE</label>
+              <select id="entity-type"><option value="organization">Organisation</option><option value="domain">Domaine</option><option value="ip">IP publique</option><option value="url">URL publique</option><option value="hash">Hash</option><option value="technology">Technologie</option><option value="certificate">Certificat</option></select>
+              <label for="entity-value">VALEUR CANONIQUE</label><input id="entity-value" maxlength="2048" required placeholder="exemple.com">
+              <label for="entity-label">LIBELLÉ</label><input id="entity-label" maxlength="160" required placeholder="Nom affiché dans le graphe">
+              <button type="submit">Ajouter l'entité</button>
+            </form>
+            <form id="relationship-form" class="graph-form">
+              <h4>Ajouter une relation sourcée</h4>
+              <label for="relation-from">ENTITÉ DE DÉPART</label><select id="relation-from" required></select>
+              <label for="relation-to">ENTITÉ D'ARRIVÉE</label><select id="relation-to" required></select>
+              <label for="relation-type">TYPE DE RELATION</label><select id="relation-type"><option value="resolves_to">Résout vers</option><option value="hosts">Héberge</option><option value="uses_technology">Utilise une technologie</option><option value="certificate_for">Certificat pour</option><option value="same_organization">Même organisation</option><option value="observed_on">Observé sur</option><option value="references">Référence</option></select>
+              <label for="relation-source">SOURCE ENREGISTRÉE</label><select id="relation-source" required></select>
+              <label for="relation-confidence">CONFIANCE (0 À 1)</label><input id="relation-confidence" type="number" min="0" max="1" step="0.01" value="0.75" required>
+              <label for="relation-rationale">JUSTIFICATION</label><textarea id="relation-rationale" rows="2" minlength="10" maxlength="2000" required></textarea>
+              <button type="submit">Créer la relation</button>
+            </form>
+          </div>
+        </div>
+        <form id="report-form" class="report-form">
+          <label for="report-format">GÉNÉRER UN RAPPORT</label>
+          <select id="report-format"><option value="pdf">PDF</option><option value="html">HTML</option><option value="json">JSON</option><option value="csv">CSV</option><option value="markdown">Markdown</option></select>
+          <button type="submit">Générer et télécharger</button>
+          <span id="report-message" role="status"></span>
+        </form>
+        <div id="reports-list" class="reports-list"></div>
+        <div class="case-detail-grid">
+          <div><h4>Notes</h4><div id="notes-list"></div><form id="note-form"><label for="note-body">Ajouter une note</label><textarea id="note-body" rows="2" maxlength="10000" required></textarea><button type="submit">Enregistrer la note</button></form></div>
+          <div><h4>Sources</h4><div id="sources-list"></div><form id="source-form"><label for="source-name">Nom de la source</label><input id="source-name" maxlength="160" required><label for="source-url">URL publique (facultatif)</label><input id="source-url" type="url" maxlength="2048" placeholder="https://..."><button type="submit">Ajouter la source</button></form></div>
+        </div>
+      </div>
+    </section>
+    <section class="panel integrations-panel" id="integrations-panel" hidden>
+      <div class="panel-head"><div><div class="eyebrow">API CENTER</div><h3>Connecteurs et fournisseurs</h3></div><button id="refresh-providers" class="secondary-button" type="button">Actualiser</button></div>
+      <p>Les clés restent sur le serveur Render. Cette page n'affiche jamais leur valeur.</p>
+      <div id="providers-list" class="providers-list"><p class="loading">Chargement des fournisseurs…</p></div>
+    </section>
+    <section class="panel threat-panel" id="threat-panel" hidden>
+      <div class="panel-head"><div><div class="eyebrow">THREAT INTELLIGENCE</div><h3>Réputation des indicateurs publics</h3></div><span class="tag">API OPTIONNELLES</span></div>
+      <p>Les résultats proviennent uniquement des fournisseurs configurés. Une absence de signal ne garantit pas l'innocuité.</p>
+      <div class="threat-forms">
+        <form id="threat-ip-form"><label for="threat-ip">IP PUBLIQUE</label><input id="threat-ip" placeholder="8.8.8.8" required><button type="submit">Vérifier IP</button></form>
+        <form id="threat-domain-form"><label for="threat-domain">DOMAINE</label><input id="threat-domain" placeholder="exemple.com" required><button type="submit">Vérifier domaine</button></form>
+        <form id="threat-hash-form"><label for="threat-hash">HASH MD5 / SHA-1 / SHA-256</label><input id="threat-hash" placeholder="SHA-256…" required><button type="submit">Vérifier hash</button></form>
+      </div>
+      <div id="threat-output" class="result empty">Configure VirusTotal ou AbuseIPDB dans Render pour obtenir des verdicts réels.</div>
+    </section>
+    <section class="panel ai-panel" id="ai-panel" hidden>
+      <div class="panel-head"><div><div class="eyebrow">AI OSINT ASSISTANT</div><h3>Assistant d'analyse sourcée</h3></div><button id="new-ai-conversation" class="secondary-button" type="button">Nouvelle conversation</button></div>
+      <div class="ai-toolbar"><label for="ai-conversation-select">CONVERSATION</label><select id="ai-conversation-select"><option value="">Aucune conversation</option></select></div>
+      <div id="ai-messages" class="ai-messages"><p class="loading">Sélectionne une conversation ou crée-en une nouvelle.</p></div>
+      <form id="ai-message-form" class="ai-message-form">
+        <textarea id="ai-message-input" rows="3" maxlength="4000" placeholder="Pose une question sur les sources, les contradictions ou les pistes de vérification…" required></textarea>
+        <label class="ai-context"><input id="ai-include-case" type="checkbox"> Inclure le dossier actuellement ouvert (envoi à OpenAI)</label>
+        <button type="submit">Envoyer à l'assistant</button>
+        <small id="ai-status" role="status">Nécessite OPENAI_API_KEY configurée sur Render.</small>
+      </form>
+    </section>
+    <section class="panel image-panel" id="image-panel" hidden>
+      <div class="panel-head"><div><div class="eyebrow">IMAGE INTELLIGENCE</div><h3>Métadonnées, empreintes et doublons</h3></div><span class="tag">ANALYSE LOCALE</span></div>
+      <p>JPEG, PNG, WebP ou TIFF · 8 Mo maximum · GPS et numéros de série exclus · aucune reconnaissance faciale ni OCR.</p>
+      <form id="image-form" class="image-form">
+        <label for="image-file">CHOISIR UNE IMAGE</label>
+        <input id="image-file" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/tiff" required>
+        <label for="image-case-select">DOSSIER ASSOCIÉ (FACULTATIF)</label>
+        <select id="image-case-select"><option value="">Aucun dossier</option></select>
+        <button type="submit">Analyser l'image</button>
+      </form>
+      <div id="image-output" class="result empty">Les fichiers ne sont pas conservés ; seules les empreintes et métadonnées autorisées sont enregistrées.</div>
+    </section>
+    <section class="panel automation-panel" id="automation-panel" hidden>
+      <div class="panel-head"><div><div class="eyebrow">OSINT AUTOMATION</div><h3>Surveillance passive planifiée</h3></div><button id="refresh-automations" class="secondary-button" type="button">Actualiser</button></div>
+      <p>Surveillance DNS et Certificate Transparency uniquement. L'exécution périodique nécessite les secrets GitHub Actions configurés après le déploiement Render.</p>
+      <form id="automation-form" class="automation-form">
+        <label for="automation-type">TYPE DE SURVEILLANCE</label>
+        <select id="automation-type"><option value="dns_change">Changements DNS</option><option value="certificate_change">Nouveaux certificats publics</option></select>
+        <label for="automation-domain">DOMAINE AUTORISÉ</label><input id="automation-domain" maxlength="253" placeholder="exemple.com" required>
+        <label for="automation-frequency">FRÉQUENCE</label><select id="automation-frequency"><option value="hourly">Toutes les heures</option><option value="daily">Chaque jour</option><option value="weekly">Chaque semaine</option></select>
+        <label class="automation-consent"><input id="automation-authorized" type="checkbox" required> Je confirme être autorisé à surveiller ce domaine.</label>
+        <button type="submit">Créer la surveillance</button>
+      </form>
+      <div id="automation-list" class="automation-list"><p class="loading">Aucune tâche chargée.</p></div>
+      <div class="panel-head notification-heading"><h3>Notifications</h3><button id="refresh-notifications" class="secondary-button" type="button">Actualiser</button></div>
+      <div id="notifications-list" class="notifications-list"><p class="loading">Chargement des notifications…</p></div>
+    </section>
+    <section class="panel admin-panel" id="admin-panel" hidden>
+      <div class="panel-head"><div><div class="eyebrow">ADMINISTRATION</div><h3>Gestion de la plateforme</h3></div><button id="refresh-admin" class="secondary-button" type="button">Actualiser</button></div>
+      <div id="admin-overview" class="admin-overview"></div>
+      <h4>Utilisateurs et rôles</h4>
+      <div id="admin-users" class="admin-users"><p class="loading">Chargement…</p></div>
+      <h4>Journal d'audit</h4>
+      <div id="admin-audit" class="admin-audit"><p class="loading">Chargement…</p></div>
+    </section>
+    <footer><span>OSINT HUB INFINITY <b>·</b> BUILD 0.2.0</span><span>Usage légal uniquement · Respect de la vie privée</span></footer>
   </main>
 </div>
+<script src="/config.js"></script>
 <script src="/app.js" defer></script>
 </body>
 </html>

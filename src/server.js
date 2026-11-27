@@ -5,12 +5,48 @@ import { z } from 'zod';
 import dns from 'node:dns/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getDatabaseStatus } from './db.js';
+import { createAuthRouter } from './auth.js';
+import { createInvestigationsRouter } from './routes/investigations.js';
+import { createIntelligenceRouter } from './routes/intelligence.js';
+import { createSearchRouter } from './routes/search.js';
+import { createIntegrationsRouter } from './routes/integrations.js';
+import { createThreatRouter } from './routes/threat.js';
+import { createReportsRouter } from './routes/reports.js';
+import { createAiRouter } from './routes/ai.js';
+import { createImageRouter } from './routes/images.js';
+import { createDashboardRouter } from './routes/dashboard.js';
+import { createAutomationsRouter } from './routes/automations.js';
+import { createNotificationsRouter } from './routes/notifications.js';
+import { createAdminRouter } from './routes/admin.js';
+import { createSettingsRouter } from './routes/settings.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 
 app.disable('x-powered-by');
+app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : false);
+
+// CORS strict : le site statique est autorisé à appeler cette API avec sa session.
+const allowedOrigins = new Set(
+  (process.env.APP_ORIGIN || '').split(',').map(value => value.trim()).filter(Boolean)
+);
+app.use('/api', (req, res, next) => {
+  const origin = req.get('origin');
+  if (!origin) return next();
+  if (!allowedOrigins.has(origin)) {
+    return res.status(403).json({ error: 'Origine non autorisée.' });
+  }
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-CSRF-Token, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -29,6 +65,18 @@ app.use('/api', rateLimit({
   legacyHeaders: false
 }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use('/api/auth', createAuthRouter());
+app.use('/api/investigations', createInvestigationsRouter());
+app.use('/api/search', createSearchRouter());
+app.use('/api/integrations', createIntegrationsRouter());
+app.use('/api/threat', createThreatRouter());
+app.use('/api/reports', createReportsRouter());
+app.use('/api/ai', createAiRouter());
+app.use('/api/dashboard', createDashboardRouter());
+app.use('/api/automations', createAutomationsRouter());
+app.use('/api/notifications', createNotificationsRouter());
+app.use('/api/admin', createAdminRouter());
+app.use('/api/settings', createSettingsRouter());
 
 const domainSchema = z.object({
   domain: z.string().trim().min(1).max(253).transform(value => value.toLowerCase())
@@ -45,14 +93,33 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+app.get('/api/ready', async (_req, res) => {
+  const database = await getDatabaseStatus();
+  if (!database.configured || !database.connected) {
+    return res.status(503).json({ ready: false, database, timestamp: new Date().toISOString() });
+  }
+  return res.json({ ready: true, database, timestamp: new Date().toISOString() });
+});
+
 app.get('/api/modules', (_req, res) => {
   res.json({ modules: [
     { id: 'domain-dns', name: 'DNS public', status: 'available', scope: 'Résolution DNS passive' },
-    { id: 'ip-intel', name: 'Renseignement IP', status: 'planned', scope: 'Sources publiques et géolocalisation approximative' },
-    { id: 'email', name: 'Analyse e-mail', status: 'planned', scope: 'Syntaxe, domaine et API autorisées' },
+    { id: 'domain-ct', name: 'Certificats de domaine', status: 'available', scope: 'Noms de certificats dans les journaux CT publics' },
+    { id: 'ip-intel', name: 'Renseignement IP', status: 'available', scope: 'RDAP public et reverse DNS pour IP publiques' },
+    { id: 'email-mx', name: 'E-mail syntaxe & MX', status: 'available', scope: 'Validation de syntaxe et DNS MX uniquement' },
+    { id: 'phone-format', name: 'Téléphone international', status: 'available', scope: 'Format, pays et type selon le plan de numérotation' },
     { id: 'username', name: 'Pseudonymes publics', status: 'planned', scope: 'Profils publics via sources autorisées' },
-    { id: 'image', name: 'Analyse d’images', status: 'planned', scope: 'Métadonnées, dimensions et SHA-256' },
-    { id: 'graph', name: 'Graphe de relations', status: 'planned', scope: 'Relations sourcées et niveaux de confiance' }
+    { id: 'image-metadata', name: 'Image metadata & hash', status: 'available', scope: 'EXIF sans GPS, dimensions, SHA-256, dHash et doublons' },
+    { id: 'image-ocr', name: 'OCR image', status: 'planned', scope: 'OCR à intégrer via moteur autorisé' },
+    { id: 'graph', name: 'Graphe interactif', status: 'planned', scope: 'Visualisation graphique à développer' },
+    { id: 'intelbase-api', name: 'IntelBase — données sourcées', status: 'available', scope: 'Entités, relations, sources et confiance' },
+    { id: 'global-search', name: 'Global Search', status: 'available', scope: 'Classification et recherches DNS, IP, e-mail, téléphone et hash' },
+    { id: 'api-center', name: 'API Center', status: 'available', scope: 'État des clés et tests de connexion des fournisseurs' },
+    { id: 'threat-intel', name: 'Threat Intelligence', status: 'available', scope: 'VirusTotal et AbuseIPDB si les clés sont configurées' },
+    { id: 'report-generator', name: 'Report Generator', status: 'available', scope: 'PDF, HTML, JSON, CSV et Markdown' },
+    { id: 'ai-assistant', name: 'AI OSINT Assistant', status: process.env.OPENAI_API_KEY ? 'available' : 'planned', scope: 'Assistant source-grounded via Responses API' },
+    { id: 'auth', name: 'Comptes & sessions', status: 'available', scope: 'Inscription, connexion, sessions sécurisées' },
+    { id: 'case-management', name: 'Gestion des dossiers', status: 'available', scope: 'Dossiers privés, notes et sources' }
   ] });
 });
 
@@ -88,10 +155,17 @@ app.post('/api/osint/dns', async (req, res) => {
   });
 });
 
+app.use('/api/osint/image', createImageRouter());
+app.use('/api/osint', createIntelligenceRouter());
+
 app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`OSINT HUB listening on ${PORT}`);
-});
+export { app };
+
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`OSINT HUB listening on ${PORT}`);
+  });
+}

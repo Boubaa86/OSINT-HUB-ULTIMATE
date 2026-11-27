@@ -1,0 +1,52 @@
+import pg from 'pg';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const { Pool } = pg;
+const here = path.dirname(fileURLToPath(import.meta.url));
+const migrationDir = path.join(here, '..', 'src', 'migrations');
+const migrations = ['001_initial_schema', '002_ai_conversations', '003_image_records', '004_automation_runs'];
+
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL is required. No database has been changed.');
+  process.exit(1);
+}
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: true } : undefined,
+  max: 1,
+  connectionTimeoutMillis: 5000
+});
+const client = await pool.connect();
+try {
+  await client.query('SELECT pg_advisory_lock(731904260)');
+  await client.query(`CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+  const applied = await client.query('SELECT version FROM schema_migrations');
+  const appliedVersions = new Set(applied.rows.map(row => row.version));
+  const latest = [...migrations].reverse().find(version => appliedVersions.has(version));
+  if (!latest) {
+    console.log('No known migration is applied. No changes made.');
+    process.exitCode = 0;
+  } else if (process.env.CONFIRM_ROLLBACK !== latest) {
+    console.error(`Rollback not run. Set CONFIRM_ROLLBACK=${latest} to explicitly confirm. No data changed.`);
+    process.exitCode = 1;
+  } else {
+    const sql = await readFile(path.join(migrationDir, `${latest}.down.sql`), 'utf8');
+    await client.query('BEGIN');
+    try {
+      await client.query(sql);
+      await client.query('DELETE FROM schema_migrations WHERE version = $1', [latest]);
+      await client.query('COMMIT');
+      console.log(`Rolled back ${latest}.`);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    }
+  }
+} finally {
+  try { await client.query('SELECT pg_advisory_unlock(731904260)'); } catch {}
+  client.release();
+  await pool.end();
+}

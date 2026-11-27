@@ -1,6 +1,16 @@
 services:
   - type: web
     name: osint-hub-ultimate
+    runtime: static
+    buildCommand: node scripts/build-static-config.js
+    staticPublishPath: public
+    autoDeploy: true
+    envVars:
+      - key: OSINT_API_BASE_URL
+        value: https://osint-hub-api.onrender.com
+
+  - type: web
+    name: osint-hub-api
     runtime: node
     plan: free
     region: frankfurt
@@ -11,6 +21,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: APP_ORIGIN
+        value: https://osint-hub-ultimate.onrender.com
       - key: DATABASE_URL
         fromDatabase:
           name: osint-hub-db
@@ -19,6 +31,11 @@ services:
         generateValue: true
       - key: TRUST_PROXY
         value: "true"
+      - key: PGSSLMODE
+        value: require
+      - key: AUTOMATION_SECRET
+        generateValue: true
+
 databases:
   - name: osint-hub-db
     plan: free
