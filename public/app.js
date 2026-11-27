@@ -141,7 +141,12 @@ async function loadSession() {
 async function loadStatus() {
   try {
     const data = await apiRequest('/api/health');
-    $('#health').textContent = `API OK · ${data.version}`;
+    try {
+      await apiRequest('/api/ready');
+      $('#health').textContent = `API OK · PostgreSQL OK · ${data.version}`;
+    } catch {
+      $('#health').textContent = 'API OK · PostgreSQL non prête';
+    }
   } catch {
     $('#health').textContent = 'API indisponible';
   }
