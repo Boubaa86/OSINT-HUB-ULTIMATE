@@ -1,5 +1,7 @@
 const $ = selector => document.querySelector(selector);
 let csrfToken = null;
+let sessionToken = null;
+try { sessionToken = sessionStorage.getItem('osint_hub_session') || null; } catch {}
 let selectedCaseId = null;
 let currentSources = [];
 let aiConversationId = null;
@@ -17,7 +19,15 @@ function apiUrl(url) {
 }
 
 async function apiRequest(url, options = {}) {
-  const response = await fetch(apiUrl(url), { credentials: 'include', ...options });
+  const headers = new Headers(options.headers || {});
+  if (sessionToken && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${sessionToken}`);
+  }
+  const response = await fetch(apiUrl(url), {
+    ...options,
+    headers,
+    credentials: API_BASE ? 'omit' : 'same-origin'
+  });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || `Erreur HTTP ${response.status}`);
   return data;
@@ -92,6 +102,8 @@ function showAccount(user) {
 
 function showSignedOut() {
   csrfToken = null;
+  sessionToken = null;
+  try { sessionStorage.removeItem('osint_hub_session'); } catch {}
   selectedCaseId = null;
   $('#auth-forms').hidden = false;
   $('#account-active').hidden = true;
@@ -221,6 +233,10 @@ $('#login-form').addEventListener('submit', async event => {
       body: JSON.stringify({ email: $('#login-email').value, password: $('#login-password').value })
     });
     csrfToken = data.csrfToken;
+    sessionToken = data.sessionToken || null;
+    if (sessionToken) {
+      try { sessionStorage.setItem('osint_hub_session', sessionToken); } catch {}
+    }
     showAccount(data.user);
     setAuthMessage('Connexion réussie.');
     $('#login-password').value = '';
@@ -242,6 +258,10 @@ $('#register-form').addEventListener('submit', async event => {
       })
     });
     csrfToken = data.csrfToken;
+    sessionToken = data.sessionToken || null;
+    if (sessionToken) {
+      try { sessionStorage.setItem('osint_hub_session', sessionToken); } catch {}
+    }
     showAccount(data.user);
     setAuthMessage('Compte créé. Bienvenue !');
     $('#register-password').value = '';
@@ -807,7 +827,10 @@ $('#image-form').addEventListener('submit', async event => {
     const response = await fetch(apiUrl('/api/osint/image'), {
       method: 'POST',
       credentials: 'include',
-      headers: { 'X-CSRF-Token': csrfToken },
+      headers: {
+        'X-CSRF-Token': csrfToken,
+        ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {})
+      },
       body: formData
     });
     const data = await response.json().catch(() => ({}));
