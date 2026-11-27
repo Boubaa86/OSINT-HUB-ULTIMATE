@@ -10,7 +10,7 @@ function escapeHtml(value) {
   }[character]));
 }
 
-const API_BASE = String(window.OSINT_CONFIG?.apiBase || '').replace(/\\/+$/, '');
+const API_BASE = String(window.OSINT_CONFIG?.apiBase || '').replace(/\/+$/, '');
 function apiUrl(url) {
   if (!API_BASE) return url;
   return new URL(url, API_BASE).toString();
