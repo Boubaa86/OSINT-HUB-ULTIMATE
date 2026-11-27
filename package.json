@@ -13,7 +13,7 @@
     "migrate:down": "node scripts/rollback.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   },
   "dependencies": {
     "express": "^5.1.0",
