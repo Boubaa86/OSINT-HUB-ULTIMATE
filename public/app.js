@@ -77,15 +77,18 @@ $('#sidebar-toggle').addEventListener('click', async () => {
 });
 
 async function loadDashboard() {
+  const investigations = $('#investigation-count');
+  const entities = $('#entity-count');
+  const summary = $('#entity-report-summary');
   try {
     const data = await apiRequest('/api/dashboard/summary');
-    $('#stat-investigations').textContent = data.investigations;
-    $('#stat-entities').textContent = data.entities;
-    $('#stat-reports').textContent = data.reports;
+    investigations.textContent = String(data.investigations);
+    entities.textContent = String(data.entities);
+    summary.textContent = `${data.sources} sources · ${data.reports} rapports · ${data.activeAutomations} veilles actives`;
   } catch {
-    $('#stat-investigations').textContent = '—';
-    $('#stat-entities').textContent = '—';
-    $('#stat-reports').textContent = '—';
+    investigations.textContent = '—';
+    entities.textContent = '—';
+    summary.textContent = 'Base OSINT non disponible : données non chargées.';
   }
 }
 
@@ -139,16 +142,27 @@ async function loadSession() {
 }
 
 async function loadStatus() {
+  const state = $('#system-state');
+  const detail = $('#system-state-detail');
   try {
     const data = await apiRequest('/api/health');
     try {
       await apiRequest('/api/ready');
       $('#health').textContent = `API OK · PostgreSQL OK · ${data.version}`;
+      state.textContent = 'OPÉRATIONNEL';
+      state.className = 'good';
+      detail.textContent = 'API et base PostgreSQL prêtes.';
     } catch {
       $('#health').textContent = 'API OK · PostgreSQL non prête';
+      state.textContent = 'API EN LIGNE';
+      state.className = 'planned';
+      detail.textContent = 'Base OSINT à configurer : les comptes et les sauvegardes sont indisponibles.';
     }
   } catch {
     $('#health').textContent = 'API indisponible';
+    state.textContent = 'HORS LIGNE';
+    state.className = 'offline';
+    detail.textContent = 'Le serveur API ne répond pas.';
   }
 }
 
