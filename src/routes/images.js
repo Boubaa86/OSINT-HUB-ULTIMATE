@@ -12,7 +12,16 @@ import { requireAuth, requireCsrf } from '../auth.js';
 const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/tiff']);
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 8 * 1024 * 1024, files: 1, fields: 1, fieldSize: 128 },
+  limits: {
+    fileSize: 8 * 1024 * 1024,
+    files: 1,
+    fields: 1,
+    parts: 2,
+    fieldSize: 128,
+    fieldNameSize: 64,
+    fieldNestingDepth: 0,
+    fieldArrayIndexLimit: 0
+  },
   fileFilter: (_req, file, callback) => {
     if (file.mimetype?.startsWith('image/')) callback(null, true);
     else callback(new Error('IMAGE_ONLY'));
