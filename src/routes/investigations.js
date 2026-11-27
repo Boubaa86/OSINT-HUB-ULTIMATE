@@ -192,7 +192,7 @@ export function createInvestigationsRouter() {
     let canonicalValue = value.canonicalValue.trim();
     if (value.entityType === 'domain') canonicalValue = canonicalValue.toLowerCase();
     if (value.entityType === 'hash') canonicalValue = canonicalValue.toLowerCase();
-    if (value.entityType === 'domain' && !/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$/i.test(value.canonicalValue)) {
+    if (value.entityType === 'domain' && !/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(value.canonicalValue)) {
       return res.status(400).json({ error: 'Nom de domaine invalide.' });
     }
     if (value.entityType === 'ip') {
@@ -208,11 +208,11 @@ export function createInvestigationsRouter() {
     if (value.entityType === 'url') {
       try {
         const parsedUrl = new URL(value.canonicalValue);
-        const hostname = parsedUrl.hostname.replace(/^\\[|\\]$/g, '').toLowerCase();
+        const hostname = parsedUrl.hostname.replace(/^\[|\]$/g, '').toLowerCase();
         if (!['http:', 'https:'].includes(parsedUrl.protocol) || parsedUrl.username || parsedUrl.password || hostname === 'localhost' || hostname.endsWith('.localhost') || hostname.endsWith('.local')) {
           return res.status(400).json({ error: 'URL publique HTTP(S) requise.' });
         }
-        const hostForRangeCheck = parsedUrl.hostname.replace(/^\\[|\\]$/g, '');
+        const hostForRangeCheck = parsedUrl.hostname.replace(/^\[|\]$/g, '');
         if (ipaddr.isValid(hostForRangeCheck) && ipaddr.parse(hostForRangeCheck).range() !== 'unicast') {
           return res.status(400).json({ error: 'Les URL vers des IP privées ou réservées sont refusées.' });
         }
