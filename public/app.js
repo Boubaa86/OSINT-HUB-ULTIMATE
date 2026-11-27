@@ -826,7 +826,7 @@ $('#image-form').addEventListener('submit', async event => {
     if ($('#image-case-select').value) formData.append('investigationId', $('#image-case-select').value);
     const response = await fetch(apiUrl('/api/osint/image'), {
       method: 'POST',
-      credentials: 'include',
+      credentials: API_BASE ? 'omit' : 'same-origin',
       headers: {
         'X-CSRF-Token': csrfToken,
         ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {})
