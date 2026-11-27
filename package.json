@@ -1,6 +1,6 @@
 {
-  "name": "osint-hub-ultimate",
-  "version": "0.1.0",
+  "name": "osint-hub-infinity",
+  "version": "0.2.0",
   "private": true,
   "description": "Privacy-respecting OSINT workspace scaffold",
   "type": "module",
