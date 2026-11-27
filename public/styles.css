@@ -166,3 +166,5 @@ body.theme-light .ai-message p{color:#1a3347}
 body.theme-light .side-bottom{border-color:#d0dce6;color:#516a80}
 body.theme-light .search-row input:focus,body.theme-light .global-search>input:focus{border-color:#168ca8}
 @media(max-width:900px){.shell.sidebar-collapsed{grid-template-columns:70px 1fr}}
+
+.stats .planned{font-size:16px;color:#d2a76b;padding:6px 0}.stats .offline{font-size:16px;color:#ff9c9c;padding:6px 0}
